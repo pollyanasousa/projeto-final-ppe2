@@ -1,18 +1,9 @@
-# LangChain
-langchain==0.2.45
-langchain-community==0.4.1
-langchain-groq==0.2.12
-
-# Vector store e embeddings
-faiss-cpu==1.8.0
-sentence-transformers==2.3.1
-
-# PDF processing
-pypdf==4.0.1
-
-# Utilities
-python-dotenv==1.0.0
-
-# PyTorch CPU-only (linha separada, sem index customizado)
-torch==2.2.0
-transformers==4.38.2
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-groq==0.2.8
+faiss-cpu==1.9.0
+sentence-transformers==3.3.1
+pypdf==5.1.0
+python-dotenv==1.0.1
+torch==2.5.1
+transformers==4.47.1
