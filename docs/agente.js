@@ -32,7 +32,7 @@ const SUGESTOES = [
     "Qual o prazo para matrícula?"
 ];
 
-const AGENTE_API_URL = 'https://projeto-final-ppe2.onrender.com';// URL do backend no Render
+const AGENTE_API_URL = 'https://projeto-final-ppe2-production.up.railway.app';// URL do backend no Render
 
 function inicializarAgente() {
     adicionarMensagemBot(MENSAGEM_INICIAL, true);
