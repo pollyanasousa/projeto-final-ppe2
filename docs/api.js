@@ -4,6 +4,33 @@
 
 const API_URL = 'https://projeto-final-ppe2.onrender.com'; // Backend produção
 
+// FUNÇÃO CONSULTAR CEP (FALTANDO!)
+async function consultarCEP(cep) {
+    try {
+        const cepLimpo = cep.replace(/\D/g, '');
+        const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cepLimpo}`);
+        
+        if (!response.ok) {
+            return { sucesso: false, erro: 'CEP não encontrado' };
+        }
+        
+        const dados = await response.json();
+        
+        return {
+            sucesso: true,
+            dados: {
+                logradouro: dados.street,
+                bairro: dados.neighborhood,
+                cidade: dados.city,
+                uf: dados.state
+            }
+        };
+    } catch (error) {
+        console.error('Erro ao consultar CEP:', error);
+        return { sucesso: false, erro: 'Erro ao consultar CEP' };
+    }
+}
+
 async function verificarInadimplencia(cpf) {
     try {
         const cpfLimpo = cpf.replace(/\D/g, '');

@@ -32,7 +32,7 @@ const SUGESTOES = [
     "Qual o prazo para matrícula?"
 ];
 
-const API_URL = 'https://projeto-final-ppe2.onrender.com'; // URL do backend no Render
+const AGENTE_API_URL = 'https://projeto-final-ppe2.onrender.com';// URL do backend no Render
 
 function inicializarAgente() {
     adicionarMensagemBot(MENSAGEM_INICIAL, true);
@@ -168,7 +168,7 @@ async function enviarPergunta() {
     try {
         const perguntaComContexto = montarPerguntaComContexto(pergunta);
 
-        const response = await fetch(`${API_URL}/api/agente-consultar`, {
+        const response = await fetch(`${AGENTE_API_URL}/api/agente-consultar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pergunta: perguntaComContexto })
