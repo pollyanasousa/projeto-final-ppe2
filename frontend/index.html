@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- ============================================== -->
+    <!-- METADADOS DO DOCUMENTO                         -->
+    <!-- ============================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processo Seletivo - Conservatório de Música de PE</title>
+    
+    <!-- Arquivo de estilos CSS externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ============================================== -->
+    <!-- CONTAINER PRINCIPAL DA APLICAÇÃO               -->
+    <!-- ============================================== -->
+    <div class="container">
+        
+        <!-- ========================================== -->
+        <!-- CABEÇALHO COM LOGO E IDENTIFICAÇÃO         -->
+        <!-- ========================================== -->
+        <!-- Seção superior contendo logotipo e título  -->
+        <!-- do Conservatório de Música de Pernambuco   -->
+        <!-- ========================================== -->
+        <header>
+            <!-- Container da logo institucional -->
+            <div class="logo-container">
+                <!-- Logo do Conservatório (substituir caminho da imagem) -->
+                <!-- Dimensões recomendadas: 200x100px -->
+                <img src="img/logo-conser.png" alt="Logo Conservatório" id="logoConservatorio">
+            </div>
+            
+            <!-- Título principal da instituição -->
+            <h1>Conservatório de Música de Pernambuco</h1>
+            
+            <!-- Subtítulo informando ano e tipo de sistema -->
+            <p>Sistema de Matrícula - Atendimento 2026</p>
+        </header>
+
+        <!-- ========================================== -->
+        <!-- ÁREA DE CONTEÚDO PRINCIPAL                 -->
+        <!-- ========================================== -->
+        <!-- Contém o formulário de inscrição e todos   -->
+        <!-- os elementos de feedback ao usuário        -->
+        <!-- ========================================== -->
+        <main>
+            
+            <!-- ====================================== -->
+            <!-- SISTEMA DE ALERTAS E NOTIFICAÇÕES      -->
+            <!-- ====================================== -->
+            <!-- Caixa de alertas que exibe mensagens   -->
+            <!-- de sucesso, erro, aviso e informação   -->
+            <!-- Controlada dinamicamente via JS        -->
+            <!-- ====================================== -->
+            <div id="alertBox" class="alert"></div>
+
+            <!-- ====================================== -->
+            <!-- INDICADOR DE CARREGAMENTO (LOADING)    -->
+            <!-- ====================================== -->
+            <!-- Exibido durante operações assíncronas: -->
+            <!-- - Verificação de inadimplência         -->
+            <!-- - Consulta de CEP                      -->
+            <!-- - Registro de inscrição                -->
+            <!-- ====================================== -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Verificando informações do candidato...</p>
+            </div>
+
+            <!-- ====================================== -->
+            <!-- FORMULÁRIO DE INSCRIÇÃO PRINCIPAL      -->
+            <!-- ====================================== -->
+            <!-- Formulário completo para coleta de     -->
+            <!-- dados do candidato ao processo seletivo -->
+            <!-- Integrado com APIs de CEP e validação  -->
+            <!-- ====================================== -->
+            <form id="inscricaoForm">
+                
+                <!-- ================================== -->
+                <!-- SEÇÃO 1: DADOS DO CANDIDATO        -->
+                <!-- ================================== -->
+                <h2>Dados do Candidato para Matrícula</h2>
+
+                <!-- Campo: Nome Completo (obrigatório) -->
+                <div class="form-group">
+                    <label for="nomeCompleto">Nome Completo *</label>
+                    <input type="text" id="nomeCompleto" name="nomeCompleto" required 
+                           placeholder="Digite o nome completo do candidato">
+                </div>
+
+                <!-- Linha com 2 campos lado a lado (responsiva) -->
+                <div class="form-row">
+                    <!-- Campo: Data de Nascimento (obrigatório) -->
+                    <!-- Utilizado para validar se é menor de 18 anos -->
+                    <div class="form-group">
+                        <label for="dataNascimento">Data de Nascimento *</label>
+                        <input type="date" id="dataNascimento" name="dataNascimento" required>
+                    </div>
+
+                    <!-- Campo: CPF do Candidato (obrigatório) -->
+                    <!-- Formatação automática aplicada via JS -->
+                    <!-- Verifica inadimplência antes de confirmar inscrição -->
+                    <div class="form-group">
+                        <label for="cpfCandidato">CPF do Candidato *</label>
+                        <input type="text" id="cpfCandidato" name="cpfCandidato" required 
+                               placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                </div>
+
+                <!-- Campo: Seleção se é menor de idade -->
+                <!-- Controla exibição da seção de responsável -->
+                <div class="form-group">
+                    <label for="menorIdade">O candidato é menor de idade?</label>
+                    <select id="menorIdade" name="menorIdade">
+                        <option value="nao">Não</option>
+                        <option value="sim">Sim</option>
+                    </select>
+                </div>
+
+                <!-- ================================== -->
+                <!-- SEÇÃO CONDICIONAL: RESPONSÁVEL     -->
+                <!-- ================================== -->
+                <!-- Exibida apenas se candidato menor  -->
+                <!-- de 18 anos (controlado via JS)     -->
+                <!-- ================================== -->
+                <div id="responsavelSection" style="display: none;">
+                    <h3>Dados do Responsável Legal</h3>
+                    
+                    <!-- Campo: Nome do Responsável (obrigatório se menor) -->
+                    <div class="form-group">
+                        <label for="nomeResponsavel">Nome do Responsável *</label>
+                        <input type="text" id="nomeResponsavel" name="nomeResponsavel" 
+                               placeholder="Digite o nome do responsável">
+                    </div>
+
+                    <!-- Campo: CPF do Responsável (obrigatório se menor) -->
+                    <!-- Também verifica inadimplência antes da inscrição -->
+                    <div class="form-group">
+                        <label for="cpfResponsavel">CPF do Responsável *</label>
+                        <input type="text" id="cpfResponsavel" name="cpfResponsavel" 
+                               placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                </div>
+
+                <!-- ================================== -->
+                <!-- SEÇÃO 2: DADOS DE CONTATO          -->
+                <!-- ================================== -->
+                <h3>Dados de Contato</h3>
+
+                <!-- Campo: E-mail (obrigatório) -->
+                <!-- Usado para envio de confirmação e comunicações -->
+                <div class="form-group">
+                    <label for="email">E-mail *</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="email@exemplo.com">
+                </div>
+
+                <!-- Campo: Telefone (obrigatório) -->
+                <!-- Formatação automática de celular/fixo via JS -->
+                <div class="form-group">
+                    <label for="telefone">Telefone/WhatsApp *</label>
+                    <input type="tel" id="telefone" name="telefone" required 
+                           placeholder="(81) 90000-0000" maxlength="15">
+                </div>
+
+                <!-- ================================== -->
+                <!-- SEÇÃO 3: ENDEREÇO COMPLETO         -->
+                <!-- ================================== -->
+                <!-- Integrado com Brasil API para      -->
+                <!-- preenchimento automático via CEP   -->
+                <!-- ================================== -->
+                <h3>Endereço</h3>
+
+                <!-- Linha: CEP e Logradouro -->
+                <div class="form-row">
+                    <!-- Campo: CEP (obrigatório) -->
+                    <!-- Consulta Brasil API ao sair do campo (blur event) -->
+                    <div class="form-group" style="flex: 0 0 30%;">
+                        <label for="cep">CEP *</label>
+                        <input type="text" id="cep" name="cep" required 
+                               placeholder="00000-000" maxlength="9">
+                        <small>A API Brasil API será consultada</small>
+                    </div>
+
+                    <!-- Campo: Logradouro (preenchido automaticamente) -->
+                    <div class="form-group" style="flex: 1;">
+                        <label for="logradouro">Rua/Avenida *</label>
+                        <input type="text" id="logradouro" name="logradouro" required 
+                               placeholder="Será preenchido automaticamente">
+                    </div>
+                </div>
+
+                <!-- Linha: Número e Complemento -->
+                <div class="form-row">
+                    <!-- Campo: Número (obrigatório) -->
+                    <div class="form-group" style="flex: 0 0 30%;">
+                        <label for="numero">Número *</label>
+                        <input type="text" id="numero" name="numero" required 
+                               placeholder="Nº">
+                    </div>
+
+                    <!-- Campo: Complemento (opcional) -->
+                    <div class="form-group" style="flex: 1;">
+                        <label for="complemento">Complemento</label>
+                        <input type="text" id="complemento" name="complemento" 
+                               placeholder="Apto, Bloco, etc (opcional)">
+                    </div>
+                </div>
+
+                <!-- Linha: Bairro, Cidade e UF -->
+                <!-- Todos preenchidos automaticamente pela API de CEP -->
+                <div class="form-row">
+                    <!-- Campo: Bairro (preenchido automaticamente) -->
+                    <div class="form-group">
+                        <label for="bairro">Bairro *</label>
+                        <input type="text" id="bairro" name="bairro" required 
+                               placeholder="Será preenchido automaticamente">
+                    </div>
+
+                    <!-- Campo: Cidade (preenchido automaticamente) -->
+                    <div class="form-group">
+                        <label for="cidade">Cidade *</label>
+                        <input type="text" id="cidade" name="cidade" required 
+                               placeholder="Será preenchido automaticamente">
+                    </div>
+
+                    <!-- Campo: UF (preenchido automaticamente) -->
+                    <div class="form-group" style="flex: 0 0 20%;">
+                        <label for="uf">UF *</label>
+                        <input type="text" id="uf" name="uf" required 
+                               placeholder="UF" maxlength="2">
+                    </div>
+                </div>
+
+                <!-- ================================== -->
+                <!-- SEÇÃO 4: CURSO PRETENDIDO          -->
+                <!-- ================================== -->
+                <h3>Curso Pretendido</h3>
+
+                <!-- Campo: Seleção de Instrumento (obrigatório) -->
+                <!-- Lista os instrumentos disponíveis no conservatório -->
+                <div class="form-group">
+                    <label for="instrumento">Instrumento *</label>
+                    <select id="instrumento" name="instrumento" required>
+                        <option value="">Selecione o instrumento</option>
+                        <option value="piano">Piano</option>
+                        <option value="violao">Violão</option>
+                        <option value="guitarra">Guitarra</option>
+                        <option value="bateria">Bateria</option>
+                        <option value="flauta">Flauta</option>
+                        <option value="violino">Violino</option>
+                        <option value="violoncelo">Violoncelo</option>
+                        <option value="saxofone">Saxofone</option>
+                        <option value="trompete">Trompete</option>
+                        <option value="canto">Canto/Técnica Vocal</option>
+                    </select>
+                </div>
+
+                <!-- Campo: Nível de Experiência (obrigatório) -->
+                <!-- Ajuda na classificação do candidato -->
+                <div class="form-group">
+                    <label for="nivelExperiencia">Nível de Experiência *</label>
+                    <select id="nivelExperiencia" name="nivelExperiencia" required>
+                        <option value="">Selecione o nível</option>
+                        <option value="iniciante">Iniciante (Nunca estudou)</option>
+                        <option value="basico">Básico (Até 1 ano de estudo)</option>
+                        <option value="intermediario">Intermediário (1 a 3 anos)</option>
+                        <option value="avancado">Avançado (Mais de 3 anos)</option>
+                    </select>
+                </div>
+
+                <!-- Campo: Checkbox de Isenção de Mensalidade -->
+                <!-- Candidatos de baixa renda podem solicitar isenção -->
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="solicitaIsencao" name="solicitaIsencao">
+                        Solicitar isenção de mensalidade (necessário comprovação socioeconômica)
+                    </label>
+                </div>
+
+                <!-- ================================== -->
+                <!-- CAIXA DE INFORMAÇÕES IMPORTANTES   -->
+                <!-- ================================== -->
+                <!-- Exibe valores e regras do processo -->
+                <!-- ================================== -->
+                <div class="info-box">
+                    <h4>Informações Importantes:</h4>
+                    <ul>
+                        <li><strong>Matrícula:</strong> R$ 40,00 (sem isenção)</li>
+                        <li><strong>Mensalidade:</strong> R$ 30,00/mês (com possibilidade de isenção)</li>
+                        <li>Sistema verificará automaticamente pendências financeiras</li>
+                        <li>Documentação necessária será solicitada após aprovação</li>
+                    </ul>
+                </div>
+
+                <!-- Botão de Submissão do Formulário -->
+                <!-- Dispara validação e processo de inscrição -->
+                <button type="submit" class="btn btn-primary">
+                    Processar Matrícula
+                </button>
+            </form>
+        </main>
+
+        <!-- ========================================== -->
+        <!-- RODAPÉ COM INFORMAÇÕES INSTITUCIONAIS      -->
+        <!-- ========================================== -->
+        <footer>
+            <p>&copy; 2026 Conservatório de Música de Pernambuco</p>
+            <p>Sistema de Gestão de Processo Seletivo - Versão 1.0</p>
+            <p>Desenvolvido com integração MongoDB e Brasil API</p>
+        </footer>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: PENDÊNCIA FINANCEIRA                    -->
+    <!-- ============================================== -->
+    <!-- Exibido quando sistema detecta inadimplência   -->
+    <!-- no CPF do candidato ou responsável             -->
+    <!-- Bloqueia inscrição até regularização           -->
+    <!-- ============================================== -->
+    <!-- Modal de Pendência -->
+    <div id="pendenciaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#dc3545"/>
+                </svg>
+            </div>
+            
+            <h2>Matrícula Bloqueada - Pendência Financeira</h2>
+            
+            <p><strong>INSTRUÇÃO AO FUNCIONÁRIO:</strong></p>
+            <p>Informar ao candidato que há pendência financeira em seu CPF ou CPF do responsável.</p>
+            
+            <div class="debt-info">
+                <h3>Detalhes da Pendência</h3>
+                <div id="debtDetails"></div>
+            </div>
+
+            <div class="alert alert-warning show">
+                <strong>Orientação:</strong> Para prosseguir com a matrícula, o candidato deve regularizar as pendências junto à secretaria.
+            </div>
+
+            <p><strong>Orientar o candidato a entrar em contato:</strong></p>
+            <p>Telefone: (81) 3355-0000</p>
+            <p>E-mail: secretaria@conservatorio.pe.gov.br</p>
+            <p>Endereço: Rua da Aurora, 463 - Boa Vista, Recife - PE</p>
+
+            <button class="btn btn-secondary" onclick="fecharModal()">Fechar e Limpar Formulário</button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL: SUCESSO NA INSCRIÇÃO                    -->
+    <!-- ============================================== -->
+    <!-- Exibido após inscrição bem-sucedida            -->
+    <!-- Mostra número de protocolo e próximos passos   -->
+    <!-- ============================================== -->
+    <!-- Modal de Sucesso -->
+    <div id="sucessoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon success">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#28a745"/>
+                </svg>
+            </div>
+            
+            <h2>Matrícula Realizada com Sucesso!</h2>
+            
+            <p><strong>Número de Protocolo:</strong> <span id="protocoloNumero"></span></p>
+            
+            <div class="success-info">
+                <h3>Orientações ao Candidato:</h3>
+                <ol>
+                    <li>Um e-mail de confirmação será enviado</li>
+                    <li>Comparecer à secretaria em até 7 dias para apresentar documentação</li>
+                    <li>Documentos necessários: RG, CPF, comprovante de residência</li>
+                    <li>Realizar o pagamento da taxa de matrícula (se aplicável)</li>
+                </ol>
+            </div>
+
+            <button class="btn btn-primary" onclick="fecharModalSucesso()">Nova Matrícula</button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- AGENTE IA - ASSISTENTE CPM                     -->
+    <!-- ============================================== -->
+    <!-- Botão flutuante canto inferior direito         -->
+    <!-- ============================================== -->
+
+    <!-- Botão Flutuante -->
+    <button id="agente-btn" class="agente-btn" title="Assistente CPM - Tire suas dúvidas">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" fill="white"/>
+            <path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z" fill="white"/>
+        </svg>
+    </button>
+
+    <!-- Janela do Chat -->
+    <div id="agente-chat" class="agente-chat hidden">
+        <!-- Header -->
+        <div class="agente-header">
+            <div class="agente-header-info">
+                <h3>Assistente CPM</h3>
+                <span class="agente-status">Online</span>
+            </div>
+            <button id="agente-fechar" class="agente-btn-fechar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="white"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Área de Mensagens -->
+        <div id="agente-messages" class="agente-messages">
+            <!-- Mensagem inicial será inserida via JS -->
+        </div>
+
+        <!-- Área de Input -->
+        <div class="agente-input-area">
+            <input 
+                type="text" 
+                id="agente-input" 
+                class="agente-input" 
+                placeholder="Digite sua dúvida sobre o processo seletivo..."
+                autocomplete="off"
+            />
+            <button id="agente-enviar" class="agente-btn-enviar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="white"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="api.js"></script>
+    <script src="agente.js"></script> <!-- NOVO -->
+    <script src="script.js"></script>
+   </body>
+</html>

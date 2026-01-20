@@ -1,0 +1,56 @@
+{
+  "name": "conservatorio-matricula-sistema",
+  "version": "1.0.0",
+  "description": "Sistema de Matrícula - Conservatório de Música de Pernambuco com testes automatizados",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server ./frontend -p 8080",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test": "cypress run",
+    "test:chrome": "cypress run --browser chrome",
+    "test:firefox": "cypress run --browser firefox",
+    "test:edge": "cypress run --browser edge",
+    "test:ct01": "cypress run --spec 'cypress/e2e/ct01-cadastro-maior-idade.cy.js'",
+    "test:ct02": "cypress run --spec 'cypress/e2e/ct02-cadastro-menor-idade.cy.js'",
+    "test:ct03": "cypress run --spec 'cypress/e2e/ct03-bloqueio-inadimplencia.cy.js'",
+    "test:ct04": "cypress run --spec 'cypress/e2e/ct04-consulta-cep.cy.js'",
+    "test:ct05": "cypress run --spec 'cypress/e2e/ct05-assistente-ia.cy.js'",
+    "test:headed": "cypress run --headed",
+    "test:record": "cypress run --record --key YOUR_RECORD_KEY",
+    "test:report": "cypress run && node generate-report.js",
+    "clean:cache": "cypress cache clear",
+    "clean:videos": "rm -rf cypress/videos",
+    "clean:screenshots": "rm -rf cypress/screenshots",
+    "clean:all": "npm run clean:videos && npm run clean:screenshots"
+  },
+  "keywords": [
+    "conservatorio",
+    "matricula",
+    "cypress",
+    "e2e",
+    "testing",
+    "mongodb",
+    "brasil-api",
+    "ia"
+  ],
+  "author": "Equipe CPM Dev",
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "^13.6.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/conservatorio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seu-usuario/conservatorio/issues"
+  },
+  "homepage": "https://github.com/seu-usuario/conservatorio#readme"
+}

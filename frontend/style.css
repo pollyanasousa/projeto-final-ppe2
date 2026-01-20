@@ -1,0 +1,1160 @@
+/* ============================================================================
+   STYLE.CSS - FOLHA DE ESTILOS PRINCIPAL
+   ============================================================================
+   Projeto: Sistema de Matrícula - Conservatório de Música de PE
+   Autor: Pollyana Cassia de Sousa
+   Data: Janeiro/2026
+   Versão: 2.0 (Corrigida - Modal sem rolagem)
+   
+   Descrição: 
+   Estilos completos para o sistema de inscrição online do Conservatório 
+   de Música de Pernambuco com integração MongoDB e Brasil API.
+   
+   Estrutura do arquivo:
+   1. Reset e Configurações Globais
+   2. Layout Principal (Container)
+   3. Cabeçalho (Header)
+   4. Conteúdo Principal (Main)
+   5. Formulários (Inputs, Selects, Buttons)
+   6. Componentes de Feedback (Alertas, Loading)
+   7. Modais (Pendência e Sucesso) - CORRIGIDO
+   8. Rodapé (Footer)
+   9. Media Queries (Responsividade)
+   
+   Paleta de Cores Institucional:
+   - Verde Escuro (#2d5f3e): Primário - Títulos e CTAs
+   - Verde Médio (#4a7c59): Secundário - Subtítulos e bordas
+   - Verde Claro (#6b9b7a): Terciário - Gradientes
+   - Branco (#ffffff): Fundo do card principal
+   - Cinza (#666666): Textos secundários
+   - Vermelho (#dc3545): Alertas de erro
+   - Amarelo (#ffc107): Alertas de aviso
+   - Azul (#17a2b8): Alertas informativos
+   - Verde Sucesso (#28a745): Confirmações
+   ============================================================================ */
+
+/* ============================================================================
+   SEÇÃO 1: RESET CSS E CONFIGURAÇÕES GLOBAIS
+   ============================================================================
+   Remove estilos padrão dos navegadores e define comportamentos base.
+   Aplicado a todos os elementos (*) para garantir consistência.
+   ============================================================================ */
+
+* {
+    margin: 0;                /* Remove margens padrão */
+    padding: 0;               /* Remove espaçamentos internos padrão */
+    box-sizing: border-box;   /* Inclui padding e border no cálculo de width/height */
+}
+
+/* Estilos globais do documento
+   Define fonte, cor de fundo e espaçamento padrão */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Gradiente diagonal verde (identidade visual institucional) */
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 50%, #6b9b7a 100%);
+    
+    min-height: 100vh;        /* Altura mínima de uma viewport completa */
+    padding: 20px;            /* Espaçamento externo para não colar nas bordas */
+    line-height: 1.6;         /* Espaçamento entre linhas para legibilidade */
+}
+
+/* ============================================================================
+   SEÇÃO 2: CONTAINER PRINCIPAL
+   ============================================================================
+   Card branco centralizado que contém toda a aplicação.
+   Flutua sobre o fundo gradiente verde criando efeito de profundidade.
+   ============================================================================ */
+
+.container {
+    max-width: 900px;                              /* Largura máxima otimizada para leitura */
+    margin: 0 auto;                                /* Centralização horizontal automática */
+    background: white;                             /* Fundo branco para contraste */
+    border-radius: 15px;                           /* Bordas arredondadas suaves */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);   /* Sombra profunda para elevar card */
+    overflow: hidden;                              /* Esconde conteúdo que ultrapasse bordas */
+}
+
+/* ============================================================================
+   SEÇÃO 3: CABEÇALHO (HEADER)
+   ============================================================================
+   Área superior com gradiente verde, logo institucional e identificação.
+   Primeira impressão visual do sistema.
+   ============================================================================ */
+
+header {
+    /* Gradiente verde institucional (alinhado com identidade visual) */
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    
+    color: white;             /* Texto branco para contraste sobre verde */
+    padding: 40px;            /* Espaçamento interno generoso */
+    text-align: center;       /* Centralização de todo conteúdo */
+}
+
+/* Container da logo institucional
+   Área delimitada para exibição do logotipo do conservatório */
+.logo-container {
+    margin-bottom: 20px;                         /* Espaço abaixo da logo */
+    min-height: 100px;                           /* Altura mínima fixa reservada */
+    display: flex;                               /* Layout flexível */
+    align-items: center;                         /* Centralização vertical */
+    justify-content: center;                     /* Centralização horizontal */
+    background: rgba(255, 255, 255, 0.1);       /* Fundo branco semi-transparente (10%) */
+    border-radius: 10px;                         /* Bordas arredondadas */
+    padding: 20px;                               /* Espaçamento interno */
+}
+
+/* Imagem do logotipo
+   Restrições de tamanho para manter proporções adequadas */
+#logoConservatorio {
+    max-width: 200px;         /* Largura máxima permitida */
+    max-height: 100px;        /* Altura máxima permitida */
+    object-fit: contain;      /* Mantém proporção original sem distorção */
+}
+
+/* Título principal do cabeçalho
+   Nome completo da instituição com destaque visual */
+header h1 {
+    font-size: 2rem;                            /* Tamanho grande (32px) */
+    margin-bottom: 10px;                        /* Espaço abaixo do título */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Sombra sutil para profundidade */
+}
+
+/* Subtítulo do cabeçalho
+   Informação sobre processo seletivo e ano */
+header p {
+    font-size: 1.1rem;        /* Tamanho médio (17.6px) */
+    opacity: 0.95;            /* Levemente transparente (95%) para hierarquia */
+}
+
+/* ============================================================================
+   SEÇÃO 4: CONTEÚDO PRINCIPAL (MAIN)
+   ============================================================================
+   Área onde fica o formulário completo e todos os elementos interativos.
+   Centro funcional do sistema.
+   ============================================================================ */
+
+main {
+    padding: 40px;            /* Espaçamento interno generoso */
+}
+
+/* Títulos de seção (H2)
+   Delimitam grandes blocos do formulário */
+h2 {
+    color: #2d5f3e;                      /* Verde escuro institucional */
+    font-size: 1.8rem;                   /* Tamanho grande (28.8px) */
+    margin-bottom: 20px;                 /* Espaço abaixo do título */
+    padding-bottom: 10px;                /* Espaço interno inferior */
+    border-bottom: 3px solid #2d5f3e;   /* Linha inferior verde para destaque */
+}
+
+/* Subtítulos (H3)
+   Delimitam subseções dentro do formulário */
+h3 {
+    color: #4a7c59;                    /* Verde médio */
+    font-size: 1.3rem;                 /* Tamanho médio (20.8px) */
+    margin: 25px 0 15px 0;             /* Espaçamento superior, inferior */
+    padding-left: 10px;                /* Afastamento do lado esquerdo */
+    border-left: 4px solid #4a7c59;   /* Barra lateral verde para destaque */
+}
+
+/* ============================================================================
+   SEÇÃO 5: COMPONENTES DE FORMULÁRIO
+   ============================================================================
+   Estilos para inputs, selects, labels, checkboxes e botões.
+   Coração funcional da aplicação - onde usuário interage.
+   ============================================================================ */
+
+/* --- 5.1: ESTRUTURA DE GRUPOS --- */
+
+/* Grupo de campo de formulário
+   Container individual para cada campo (label + input/select) */
+.form-group {
+    margin-bottom: 20px;      /* Espaçamento entre campos */
+    flex: 1;                  /* Ocupa espaço disponível em layouts flex */
+}
+
+/* Linha de formulário
+   Permite disposição horizontal de múltiplos campos lado a lado */
+.form-row {
+    display: flex;            /* Layout flexível */
+    gap: 20px;                /* Espaço entre campos adjacentes */
+    flex-wrap: wrap;          /* Quebra linha em telas pequenas */
+}
+
+/* --- 5.2: LABELS E TEXTOS AUXILIARES --- */
+
+/* Labels de campos
+   Identificação dos campos de entrada */
+label {
+    display: block;           /* Ocupa linha inteira */
+    font-weight: 600;         /* Negrito para destaque */
+    margin-bottom: 8px;       /* Espaço entre label e input */
+    color: #333;              /* Cinza escuro */
+    font-size: 0.95rem;       /* Tamanho ligeiramente menor que texto normal */
+}
+
+/* Textos auxiliares (small)
+   Dicas e informações complementares abaixo dos inputs */
+small {
+    display: block;           /* Ocupa linha inteira */
+    color: #666;              /* Cinza médio (menor destaque) */
+    font-size: 0.85rem;       /* Tamanho reduzido */
+    margin-top: 4px;          /* Pequeno espaço acima */
+    font-style: italic;       /* Itálico para diferenciar */
+}
+
+/* --- 5.3: INPUTS E SELECTS --- */
+
+/* Campos de entrada de dados (texto, email, data, etc.) */
+input, 
+select {
+    width: 100%;                                /* Ocupa largura total do container */
+    padding: 12px 15px;                         /* Espaçamento interno confortável */
+    border: 2px solid #d0d0d0;                 /* Borda cinza clara */
+    border-radius: 8px;                         /* Bordas arredondadas */
+    font-size: 1rem;                            /* Tamanho padrão de texto */
+    transition: all 0.3s ease;                  /* Transição suave para interações */
+    background: white;                          /* Fundo branco */
+}
+
+/* Estado de foco dos campos
+   Visual quando campo está ativo (clicado/selecionado) */
+input:focus, 
+select:focus {
+    outline: none;                              /* Remove outline padrão do navegador */
+    border-color: #4a7c59;                     /* Borda verde ao focar */
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15); /* Halo verde sutil (15% opaco) */
+}
+
+/* Estado desabilitado dos campos
+   Visual para campos não editáveis */
+input:disabled, 
+select:disabled {
+    background: #f5f5f5;      /* Fundo cinza claro */
+    cursor: not-allowed;      /* Cursor indicando bloqueio */
+}
+
+/* --- 5.4: CHECKBOX --- */
+
+/* Grupo de checkbox
+   Container para checkbox com label associado */
+.checkbox-group {
+    margin: 20px 0;           /* Espaçamento vertical */
+}
+
+/* Label de checkbox
+   Layout flexível para alinhar checkbox e texto lado a lado */
+.checkbox-group label {
+    display: flex;            /* Layout flexível */
+    align-items: center;      /* Alinhamento vertical central */
+    gap: 10px;                /* Espaço entre checkbox e texto */
+    cursor: pointer;          /* Cursor de mão (clicável) */
+    font-weight: normal;      /* Peso normal (diferente de outros labels) */
+}
+
+/* Input checkbox
+   Ajustes específicos para elemento checkbox */
+.checkbox-group input[type="checkbox"] {
+    width: auto;              /* Não ocupa 100% como outros inputs */
+    cursor: pointer;          /* Cursor de mão (clicável) */
+}
+
+/* --- 5.5: CAIXA DE INFORMAÇÕES --- */
+
+/* Info box
+   Caixa destacada para informações importantes (valores, regras) */
+.info-box {
+    background: #f0f7f3;                  /* Verde muito claro (tom pastel) */
+    border: 2px solid #4a7c59;           /* Borda verde institucional */
+    border-radius: 10px;                  /* Bordas arredondadas */
+    padding: 20px;                        /* Espaçamento interno */
+    margin: 25px 0;                       /* Espaçamento vertical */
+}
+
+/* Título da info box */
+.info-box h4 {
+    color: #2d5f3e;           /* Verde escuro */
+    margin-bottom: 10px;      /* Espaço abaixo do título */
+}
+
+/* Lista dentro da info box */
+.info-box ul {
+    margin-left: 20px;        /* Indentação da lista */
+}
+
+/* Itens da lista */
+.info-box li {
+    margin-bottom: 8px;       /* Espaço entre itens */
+    color: #333;              /* Cinza escuro */
+}
+
+/* --- 5.6: BOTÕES --- */
+
+/* Estilo base de botões
+   Propriedades compartilhadas por todos os botões do sistema */
+.btn {
+    padding: 15px 30px;                   /* Espaçamento interno generoso */
+    border: none;                         /* Remove borda padrão */
+    border-radius: 8px;                   /* Bordas arredondadas */
+    font-size: 1rem;                      /* Tamanho padrão de texto */
+    font-weight: 600;                     /* Negrito para destaque */
+    cursor: pointer;                      /* Cursor de mão (clicável) */
+    transition: all 0.3s ease;            /* Transição suave para hover */
+    width: 100%;                          /* Ocupa largura total */
+    text-transform: uppercase;            /* Texto em maiúsculas */
+    letter-spacing: 1px;                  /* Espaçamento entre letras */
+}
+
+/* Botão primário
+   Ação principal do sistema (submeter formulário) */
+.btn-primary {
+    /* Gradiente verde institucional */
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    color: white;                         /* Texto branco para contraste */
+}
+
+/* Hover do botão primário
+   Efeito de elevação ao passar mouse sobre botão */
+.btn-primary:hover {
+    transform: translateY(-2px);                    /* Move 2px para cima */
+    box-shadow: 0 10px 25px rgba(45, 95, 62, 0.4); /* Sombra aumentada */
+}
+
+/* Estado desabilitado do botão primário
+   Visual quando botão não pode ser clicado */
+.btn-primary:disabled {
+    background: #999;         /* Cinza quando desabilitado */
+    cursor: not-allowed;      /* Cursor indicando bloqueio */
+    transform: none;          /* Remove efeito de elevação */
+}
+
+/* Botão secundário
+   Ações secundárias (fechar modal, cancelar) */
+.btn-secondary {
+    background: #6c757d;      /* Cinza médio */
+    color: white;             /* Texto branco */
+}
+
+/* Hover do botão secundário */
+.btn-secondary:hover {
+    background: #5a6268;      /* Cinza mais escuro ao passar mouse */
+}
+
+/* ============================================================================
+   SEÇÃO 6: SISTEMA DE ALERTAS
+   ============================================================================
+   Notificações coloridas para feedback ao usuário.
+   Tipos: sucesso (verde), erro (vermelho), aviso (amarelo), info (azul).
+   ============================================================================ */
+
+/* Container base de alerta
+   Estrutura comum para todos os tipos de alerta */
+.alert {
+    padding: 15px 20px;                   /* Espaçamento interno */
+    border-radius: 8px;                   /* Bordas arredondadas */
+    margin-bottom: 20px;                  /* Espaço abaixo */
+    display: none;                        /* Oculto por padrão */
+    animation: slideDown 0.3s ease;       /* Animação de entrada */
+    border-left: 4px solid;               /* Barra colorida lateral (cor definida por tipo) */
+}
+
+/* Animação de entrada dos alertas
+   Desliza suavemente de cima para baixo */
+@keyframes slideDown {
+    from {
+        opacity: 0;                       /* Começa invisível */
+        transform: translateY(-10px);     /* 10px acima */
+    }
+    to {
+        opacity: 1;                       /* Termina visível */
+        transform: translateY(0);         /* Posição original */
+    }
+}
+
+/* Estado visível do alerta
+   Classe adicionada via JavaScript para exibir alerta */
+.alert.show {
+    display: block;           /* Torna visível */
+}
+
+/* Alerta de sucesso (verde)
+   Operações bem-sucedidas, confirmações positivas */
+.alert-success {
+    background: #d4edda;      /* Verde claro */
+    border-color: #28a745;    /* Verde médio (borda) */
+    color: #155724;           /* Verde escuro (texto) */
+}
+
+/* Alerta de erro (vermelho)
+   Erros, validações falhas, problemas críticos */
+.alert-danger {
+    background: #f8d7da;      /* Vermelho claro */
+    border-color: #dc3545;    /* Vermelho médio (borda) */
+    color: #721c24;           /* Vermelho escuro (texto) */
+}
+
+/* Alerta de aviso (amarelo)
+   Avisos, atenções, situações que requerem cuidado */
+.alert-warning {
+    background: #fff3cd;      /* Amarelo claro */
+    border-color: #ffc107;    /* Amarelo médio (borda) */
+    color: #856404;           /* Amarelo escuro (texto) */
+}
+
+/* Alerta informativo (azul)
+   Informações neutras, dicas, orientações */
+.alert-info {
+    background: #d1ecf1;      /* Azul claro */
+    border-color: #17a2b8;    /* Azul médio (borda) */
+    color: #0c5460;           /* Azul escuro (texto) */
+}
+
+/* ============================================================================
+   SEÇÃO 7: INDICADOR DE CARREGAMENTO (LOADING)
+   ============================================================================
+   Spinner animado exibido durante operações assíncronas.
+   Feedback visual para requisições à API (CEP, inadimplência, registro).
+   ============================================================================ */
+
+/* Container de loading
+   Área centralizada para exibir spinner e mensagem */
+.loading {
+    display: none;            /* Oculto por padrão */
+    text-align: center;       /* Centralização de conteúdo */
+    padding: 30px;            /* Espaçamento interno */
+}
+
+/* Estado visível do loading
+   Classe adicionada via JavaScript durante operações */
+.loading.show {
+    display: block;           /* Torna visível */
+}
+
+/* Spinner animado
+   Círculo rotativo que indica processamento em andamento */
+.spinner {
+    border: 4px solid #f3f3f3;            /* Borda cinza clara (fundo) */
+    border-top: 4px solid #2d5f3e;       /* Topo verde (cria efeito de rotação) */
+    border-radius: 50%;                   /* Círculo perfeito */
+    width: 50px;                          /* Largura fixa */
+    height: 50px;                         /* Altura fixa */
+    animation: spin 1s linear infinite;   /* Rotação contínua de 1 segundo */
+    margin: 0 auto 15px;                  /* Centralização horizontal + espaço abaixo */
+}
+
+/* Animação de rotação do spinner
+   Gira 360 graus continuamente */
+@keyframes spin {
+    0% { 
+        transform: rotate(0deg);          /* Posição inicial */
+    }
+    100% { 
+        transform: rotate(360deg);        /* Rotação completa */
+    }
+}
+
+/* ============================================================================
+   SEÇÃO 8: SISTEMA DE MODAIS - VERSÃO CORRIGIDA SEM ROLAGEM
+   ============================================================================
+   Janelas sobrepostas para:
+   1. Modal de Pendência Financeira (bloqueio de matrícula)
+   2. Modal de Sucesso (confirmação de inscrição)
+   
+   CORREÇÃO APLICADA: Removidos max-height e overflow-y que causavam rolagem.
+   ============================================================================ */
+
+/* --- 8.1: ESTRUTURA BASE DO MODAL --- */
+
+/* Overlay do modal
+   Camada escura semi-transparente que cobre toda a página */
+.modal {
+    display: none;                        /* Oculto por padrão */
+    position: fixed;                      /* Fixo na viewport (não rola com página) */
+    top: 0;                               /* Grudado no topo */
+    left: 0;                              /* Grudado na esquerda */
+    width: 100%;                          /* Largura total da tela */
+    height: 100%;                         /* Altura total da tela */
+    background: rgba(0, 0, 0, 0.7);      /* Fundo preto 70% opaco */
+    z-index: 1000;                        /* Acima de todos os outros elementos */
+    align-items: center;                  /* Centralização vertical */
+    justify-content: center;              /* Centralização horizontal */
+    padding: 20px;                        /* Espaçamento nas bordas */
+}
+
+/* Estado visível do modal
+   Classe adicionada via JavaScript para exibir modal */
+.modal.show {
+    display: flex;            /* Exibido como flexbox (para centralização) */
+}
+
+/* Conteúdo do modal - VERSÃO CORRIGIDA
+   Card branco centralizado sobre o overlay 
+   CORREÇÃO: Removido max-height e overflow-y para eliminar rolagem */
+.modal-content {
+    background: white;                    /* Fundo branco */
+    padding: 30px;                        /* Espaçamento interno (reduzido de 40px) */
+    border-radius: 15px;                  /* Bordas arredondadas */
+    max-width: 600px;                     /* Largura máxima */
+    width: 100%;                          /* Ocupa largura disponível */
+    text-align: center;                   /* Centralização de texto */
+    animation: modalSlide 0.3s ease;      /* Animação de entrada */
+    /* REMOVIDO: max-height: 85vh; */
+    /* REMOVIDO: overflow-y: auto; */
+}
+
+/* Animação de entrada do modal
+   Efeito de zoom suave ao aparecer */
+@keyframes modalSlide {
+    from {
+        opacity: 0;                       /* Começa invisível */
+        transform: scale(0.9);            /* 90% do tamanho */
+    }
+    to {
+        opacity: 1;                       /* Termina visível */
+        transform: scale(1);              /* Tamanho normal (100%) */
+    }
+}
+
+/* --- 8.2: ÍCONES DO MODAL --- */
+
+/* Container de ícone do modal
+   Área para exibir ícones SVG (alerta ou sucesso) */
+.modal-icon {
+    font-size: 4rem;          /* Tamanho grande */
+    margin-bottom: 20px;      /* Espaço abaixo do ícone */
+}
+
+/* Ícone SVG redimensionado - AJUSTE */
+.modal-icon svg {
+    width: 60px;              /* Reduzido de 80px para economizar espaço */
+    height: 60px;             /* Reduzido de 80px */
+}
+
+/* Ícone de sucesso
+   Cor verde para indicar operação bem-sucedida */
+.modal-icon.success {
+    color: #28a745;           /* Verde de sucesso */
+}
+
+/* --- 8.3: TÍTULOS E TEXTOS DO MODAL --- */
+
+/* Título do modal (H2)
+   Cor vermelha por padrão (modal de pendência) */
+.modal h2 {
+    color: #dc3545;           /* Vermelho para alertas */
+    margin-bottom: 10px;      /* Espaço abaixo (reduzido de 15px) */
+    font-size: 1.5rem;        /* Tamanho reduzido de 1.8rem */
+    border: none;             /* Remove borda inferior que h2 normalmente tem */
+}
+
+/* Título do modal de sucesso
+   Sobrescreve cor vermelha para verde */
+#sucessoModal h2 {
+    color: #28a745;           /* Verde de sucesso */
+}
+
+/* Parágrafos do modal */
+.modal p {
+    color: #666;              /* Cinza médio */
+    margin-bottom: 8px;       /* Espaço abaixo (reduzido de 10px) */
+    font-size: 0.95rem;       /* Tamanho reduzido */
+    line-height: 1.6;         /* Espaçamento entre linhas */
+}
+
+/* --- 8.4: INFORMAÇÕES DE DÉBITO (Modal de Pendência) - CORRIGIDO --- */
+
+/* Container de detalhes da dívida - VERSÃO CORRIGIDA
+   Exibe lista de débitos pendentes
+   CORREÇÃO: Removido max-height e overflow-y para eliminar rolagem interna */
+.debt-info {
+    background: #f8f9fa;      /* Fundo cinza claro */
+    padding: 15px;            /* Espaçamento interno (reduzido de 20px) */
+    border-radius: 8px;       /* Bordas arredondadas */
+    margin: 20px 0;           /* Espaçamento vertical */
+    text-align: left;         /* Alinhamento à esquerda */
+    /* REMOVIDO: max-height: 300px; */
+    /* REMOVIDO: overflow-y: auto; */
+}
+
+/* Título da seção de débitos */
+.debt-info h3 {
+    color: #333;              /* Cinza escuro */
+    margin-bottom: 15px;      /* Espaço abaixo do título */
+    border: none;             /* Remove borda lateral que h3 normalmente tem */
+}
+
+/* Item individual de débito
+   Linha com descrição e valor lado a lado */
+.debt-item {
+    display: flex;                        /* Layout flexível */
+    justify-content: space-between;       /* Descrição à esquerda, valor à direita */
+    padding: 8px 0;                       /* Espaçamento vertical (reduzido de 10px) */
+    border-bottom: 1px solid #e0e0e0;    /* Linha separadora */
+    font-size: 0.9rem;                    /* Tamanho de texto reduzido */
+}
+
+/* Último item (Total a Quitar)
+   Destaque visual especial para o total */
+.debt-item:last-child {
+    border-bottom: none;                  /* Remove linha inferior */
+    font-weight: bold;                    /* Negrito para destaque */
+    color: #dc3545;                       /* Vermelho para chamar atenção */
+    font-size: 1.1rem;                    /* Tamanho maior que outros itens */
+    margin-top: 10px;                     /* Espaço acima */
+    padding-top: 15px;                    /* Espaçamento interno superior */
+    border-top: 2px solid #dc3545;       /* Linha superior vermelha destacada */
+}
+
+/* --- 8.5: INFORMAÇÕES DE SUCESSO (Modal de Sucesso) --- */
+
+/* Container de informações pós-inscrição
+   Lista ordenada de próximos passos */
+.success-info {
+    background: #f0f7f3;                  /* Verde muito claro */
+    padding: 20px;                        /* Espaçamento interno */
+    border-radius: 8px;                   /* Bordas arredondadas */
+    margin: 20px 0;                       /* Espaçamento vertical */
+    text-align: left;                     /* Alinhamento à esquerda */
+    border: 2px solid #28a745;           /* Borda verde de sucesso */
+}
+
+/* Título da seção de sucesso */
+.success-info h3 {
+    color: #2d5f3e;           /* Verde escuro institucional */
+    margin-bottom: 15px;      /* Espaço abaixo do título */
+    border: none;             /* Remove borda lateral que h3 normalmente tem */
+}
+
+/* Lista ordenada de próximos passos */
+.success-info ol {
+    margin-left: 20px;        /* Indentação da lista */
+}
+
+/* Itens da lista de próximos passos */
+.success-info li {
+    margin-bottom: 10px;      /* Espaço entre itens */
+    color: #333;              /* Cinza escuro */
+}
+
+/* --- 8.6: AJUSTES ADICIONAIS DO MODAL --- */
+
+/* Alert dentro do modal
+   Versão compacta para uso em modais */
+.modal-content .alert {
+    padding: 10px 15px;       /* Espaçamento interno reduzido */
+    margin: 15px 0;           /* Espaçamento vertical */
+    font-size: 0.9rem;        /* Tamanho de texto reduzido */
+}
+
+/* Botão dentro do modal
+   Versão mais compacta para economizar espaço */
+.modal-content .btn {
+    margin-top: 15px;         /* Espaço acima do botão */
+    padding: 12px 25px;       /* Espaçamento interno reduzido */
+    font-size: 0.95rem;       /* Tamanho de texto ligeiramente reduzido */
+}
+
+/* ============================================================================
+   SEÇÃO 9: RODAPÉ
+   ============================================================================
+   Informações institucionais no final da página.
+   Contém copyright, versão do sistema e créditos.
+   ============================================================================ */
+
+footer {
+    background: #f8f9fa;                  /* Fundo cinza claro */
+    padding: 25px;                        /* Espaçamento interno */
+    text-align: center;                   /* Centralização de texto */
+    color: #666;                          /* Cinza médio */
+    font-size: 0.9rem;                    /* Tamanho de texto reduzido */
+    border-top: 3px solid #2d5f3e;       /* Barra verde superior (identidade visual) */
+}
+
+/* Parágrafos do rodapé */
+footer p {
+    margin-bottom: 5px;       /* Pequeno espaço entre linhas */
+}
+
+/* ============================================================================
+   SEÇÃO 10: MEDIA QUERIES - RESPONSIVIDADE
+   ============================================================================
+   Adaptações de layout para diferentes tamanhos de tela.
+   Garante usabilidade em tablets, smartphones e desktops.
+   
+   Breakpoints:
+   - 768px: Tablets e telas médias
+   - 480px: Smartphones
+   ============================================================================ */
+
+/* ========================================
+   TABLETS E TELAS MÉDIAS (até 768px)
+   ========================================
+   Ajustes para tablets em modo retrato e
+   telas de notebooks pequenos.
+   ======================================== */
+@media (max-width: 768px) {
+    
+    /* Reduz padding externo para aproveitar espaço */
+    body {
+        padding: 10px;
+    }
+
+    /* Reduz padding do cabeçalho */
+    header {
+        padding: 30px 20px;
+    }
+
+    /* Reduz tamanho do título principal */
+    header h1 {
+        font-size: 1.5rem;        /* De 2rem para 1.5rem */
+    }
+
+    /* Reduz tamanho do subtítulo */
+    header p {
+        font-size: 0.95rem;       /* De 1.1rem para 0.95rem */
+    }
+
+    /* Reduz padding interno do conteúdo */
+    main {
+        padding: 25px;            /* De 40px para 25px */
+    }
+
+    /* Campos lado a lado viram empilhados (coluna)
+       Melhora usabilidade em telas menores */
+    .form-row {
+        flex-direction: column;   /* De row para column */
+    }
+
+    /* Ajusta tamanho dos títulos de seção */
+    h2 {
+        font-size: 1.5rem;        /* De 1.8rem para 1.5rem */
+    }
+
+    /* Ajusta tamanho dos subtítulos */
+    h3 {
+        font-size: 1.1rem;        /* De 1.3rem para 1.1rem */
+    }
+
+    /* Reduz padding dos modais */
+    .modal-content {
+        padding: 25px;            /* De 30px para 25px */
+        max-width: 95%;           /* Usa quase toda largura disponível */
+    }
+    
+    /* Reduz ainda mais título do modal */
+    .modal-content h2 {
+        font-size: 1.3rem;        /* De 1.5rem para 1.3rem */
+    }
+}
+
+/* ========================================
+   SMARTPHONES (até 480px)
+   ========================================
+   Ajustes para smartphones em modo retrato.
+   Máxima simplificação e otimização de espaço.
+   ======================================== */
+@media (max-width: 480px) {
+    
+    /* Reduz ainda mais padding do cabeçalho */
+    header {
+        padding: 25px 15px;       /* Mínimo necessário */
+    }
+
+    /* Reduz padding do conteúdo principal */
+    main {
+        padding: 20px 15px;       /* Espaço mínimo confortável */
+    }
+
+    /* Reduz tamanho e padding dos botões para mobile */
+    .btn {
+        padding: 12px 20px;       /* De 15px 30px para 12px 20px */
+        font-size: 0.9rem;        /* De 1rem para 0.9rem */
+    }
+
+    /* Ajusta modal para telas muito pequenas */
+    .modal-content {
+        padding: 15px;            /* Espaçamento mínimo */
+    }
+    
+    /* Reduz ícone do modal em smartphones */
+    .modal-icon svg {
+        width: 50px;              /* De 60px para 50px */
+        height: 50px;
+    }
+
+    /* Reduz padding da info-box em mobile */
+    .info-box {
+        padding: 15px;            /* De 20px para 15px */
+    }
+
+    /* Ajusta tamanho da logo em telas pequenas */
+    #logoConservatorio {
+        max-width: 150px;         /* De 200px para 150px */
+        max-height: 75px;         /* De 100px para 75px */
+    }
+
+    /* Reduz altura mínima do container da logo */
+    .logo-container {
+        min-height: 80px;         /* De 100px para 80px */
+    }
+}
+
+/* ============================================================================
+   AGENTE IA - ASSISTENTE CPM (SEÇÃO CORRIGIDA)
+   ============================================================================
+   CORREÇÕES APLICADAS:
+   1. ✅ Chat não cobre mais o formulário completamente
+   2. ✅ Posicionamento melhorado em mobile
+   3. ✅ Texto formatado com quebras de linha preservadas
+   4. ✅ Melhor contraste e legibilidade
+   ============================================================================ */
+
+/* ===== BOTÃO FLUTUANTE ===== */
+.agente-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    border: none;
+    box-shadow: 0 4px 12px rgba(45, 95, 62, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 999; /* ✅ Abaixo do chat (1000) mas acima do formulário */
+}
+
+.agente-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(45, 95, 62, 0.6);
+}
+
+.agente-btn:active {
+    transform: scale(0.95);
+}
+
+/* ===== JANELA DO CHAT - CORRIGIDA ===== */
+.agente-chat {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 420px; /* ✅ Largura aumentada para melhor leitura */
+    height: 600px;
+    max-height: calc(100vh - 120px); /* ✅ Não ultrapassa viewport */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000; /* ✅ Acima de tudo, mas não cobre 100% da tela */
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.agente-chat.hidden {
+    display: none;
+}
+
+/* ===== HEADER ===== */
+.agente-header {
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.agente-header-info h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    border: none;
+    padding: 0;
+}
+
+.agente-status {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.8);
+    display: block;
+    margin-top: 2px;
+}
+
+.agente-btn-fechar {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.agente-btn-fechar:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== ÁREA DE MENSAGENS - MELHORADA ===== */
+.agente-messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+    background: #f8f9fa;
+    /* ✅ Scrollbar personalizada */
+    scrollbar-width: thin;
+    scrollbar-color: #4a7c59 #f8f9fa;
+}
+
+/* Scrollbar personalizada para Chrome/Edge */
+.agente-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.agente-messages::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.agente-messages::-webkit-scrollbar-thumb {
+    background: #4a7c59;
+    border-radius: 3px;
+}
+
+.agente-messages::-webkit-scrollbar-thumb:hover {
+    background: #2d5f3e;
+}
+
+/* ===== MENSAGEM DO BOT - FORMATAÇÃO MELHORADA ===== */
+.message-bot {
+    background: white;
+    padding: 14px 18px; /* ✅ Mais espaço interno */
+    border-radius: 12px 12px 12px 4px;
+    margin-bottom: 16px;
+    border-left: 3px solid #2d5f3e;
+    animation: slideIn 0.3s ease;
+    max-width: 90%; /* ✅ Aumentado de 85% para melhor uso do espaço */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* ✅ Sombra sutil */
+}
+
+.message-bot-header {
+    font-weight: 600;
+    color: #2d5f3e;
+    margin-bottom: 10px; /* ✅ Aumentado de 8px */
+    font-size: 13px;
+}
+
+.message-bot-text {
+    color: #333;
+    line-height: 1.6; /* ✅ Melhor espaçamento entre linhas */
+    font-size: 14px;
+    /* ✅ PRESERVA QUEBRAS DE LINHA E FORMATAÇÃO */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ✅ ESTILO PARA ELEMENTOS FORMATADOS DENTRO DA MENSAGEM */
+.message-bot-text strong {
+    color: #2d5f3e;
+    font-weight: 600;
+}
+
+.message-bot-text em {
+    font-style: italic;
+    color: #666;
+}
+
+.message-bot-text br {
+    content: "";
+    display: block;
+    margin: 4px 0; /* ✅ Espaço entre linhas */
+}
+
+/* ===== MENSAGEM DO USUÁRIO ===== */
+.message-user {
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px 12px 4px 12px;
+    margin-bottom: 16px;
+    margin-left: auto;
+    max-width: 85%;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-user-text {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ===== SUGESTÕES DE PERGUNTAS ===== */
+.sugestoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.sugestao-btn {
+    background: #f0f7f3;
+    border: 1px solid #4a7c59;
+    color: #2d5f3e;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.sugestao-btn:hover {
+    background: #2d5f3e;
+    color: white;
+    transform: translateX(4px);
+}
+
+/* ===== LOADING (DIGITANDO...) ===== */
+.message-loading {
+    background: white;
+    padding: 12px 16px;
+    border-radius: 12px 12px 12px 4px;
+    margin-bottom: 16px;
+    border-left: 3px solid #4a7c59;
+    max-width: 85%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loading-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4a7c59;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+
+.loading-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { 
+        transform: scale(0);
+    }
+    40% { 
+        transform: scale(1);
+    }
+}
+
+/* ===== ÁREA DE INPUT ===== */
+.agente-input-area {
+    padding: 16px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.agente-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #d0d0d0;
+    border-radius: 24px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.agente-input:focus {
+    border-color: #4a7c59;
+}
+
+.agente-btn-enviar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2d5f3e 0%, #4a7c59 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.agente-btn-enviar:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(45, 95, 62, 0.3);
+}
+
+.agente-btn-enviar:active {
+    transform: scale(0.95);
+}
+
+.agente-btn-enviar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVIDADE - CORRIGIDA ===== */
+@media (max-width: 768px) {
+    .agente-chat {
+        width: calc(100vw - 40px); /* ✅ Usa quase toda largura em tablets */
+        right: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .agente-chat {
+        width: calc(100vw - 20px); /* ✅ Largura total menos margens */
+        right: 10px;
+        bottom: 80px;
+        height: calc(100vh - 100px); /* ✅ Altura máxima em mobile */
+        max-height: 550px; /* ✅ Limita altura para não cobrir tudo */
+    }
+    
+    .agente-btn {
+        right: 10px;
+        bottom: 10px;
+        width: 56px; /* ✅ Ligeiramente menor em mobile */
+        height: 56px;
+    }
+
+    .message-bot,
+    .message-user {
+        max-width: 95%; /* ✅ Usa mais espaço em telas pequenas */
+    }
+}
