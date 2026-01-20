@@ -1,42 +1,63 @@
-# Usar imagem Node.js com Python
-FROM node:18
+# ==================================================
+# STAGE 1: Build dependencies
+# ==================================================
+FROM python:3.11-slim as builder
 
-# Instalar Python e pip
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
+# Instalar apenas o necessario para compilar
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar link simbólico
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Instalar dependencias Python
+WORKDIR /app
+COPY python_rag/requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Definir diretório de trabalho
+# ==================================================
+# STAGE 2: Runtime (imagem final)
+# ==================================================
+FROM python:3.11-slim
+
+# Instalar Node.js 18 LTS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copiar dependencias Python do stage anterior
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+
+# Configurar diretorio de trabalho
 WORKDIR /app
 
-# Copiar requirements.txt e instalar dependências Python usando venv
-COPY python_rag/requirements.txt ./python_rag/requirements.txt
-RUN python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --upgrade pip && \
-    /opt/venv/bin/pip install --no-cache-dir -r ./python_rag/requirements.txt
-
-# Adicionar venv ao PATH
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Copiar package.json do backend e instalar dependências Node
+# Instalar dependencias Node.js
 COPY backend/package*.json ./backend/
 WORKDIR /app/backend
-RUN npm install
+RUN npm ci --only=production && npm cache clean --force
 
-# Voltar para raiz e copiar todo o código
+# Copiar codigo fonte
 WORKDIR /app
-COPY . .
+COPY backend ./backend
+COPY python_rag ./python_rag
 
-# Configurar diretório de trabalho final
+# Pre-processar cache FAISS (otimizacao)
+WORKDIR /app/python_rag
+RUN python3 -c "from agente_cpm import carregar_pdfs_cpm; carregar_pdfs_cpm()" 2>/dev/null || echo "Cache sera criado no primeiro uso"
+
+# Voltar ao diretorio do backend
 WORKDIR /app/backend
 
-# Expor porta
+# Expor porta do Railway
 EXPOSE 3000
 
-# Comando para iniciar
+# Variaveis de ambiente
+ENV NODE_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+# Comando de inicializacao
 CMD ["node", "server.js"]

@@ -1,5 +1,5 @@
 // =====================================================
-//  AGENTE.JS – Endpoint do Assistente IA (RAG + GROQ)
+//  AGENTE.JS - Endpoint do Assistente IA (RAG + GROQ)
 // =====================================================
 
 const express = require('express');
@@ -7,36 +7,60 @@ const router = express.Router();
 const { spawn } = require('child_process');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 // =====================================================
-//  CORS – permitir acesso do front
+//  CORS - permitir acesso do front
 router.use(cors({ origin: '*' }));
 
 // =====================================================
-//  Caminho do script Python - ajustado para estrutura do Railway
+//  Caminho do script Python
+//  De: backend/routes/ -> python_rag/agente_cpm.py
+//  __dirname e backend/routes/
+//  Subimos 2 niveis: ../../ = raiz do projeto
+//  Depois: python_rag/agente_cpm.py
 const scriptPath = path.resolve(__dirname, '../../python_rag/agente_cpm.py');
 
 // =====================================================
-//  Executável Python
+//  Executavel Python
 const pythonExecutable = 'python3';
 
 console.log('[AGENTE] Python em uso:', pythonExecutable);
 console.log('[AGENTE] Script carregado:', scriptPath);
+console.log('[AGENTE] Diretorio atual:', __dirname);
 
 // =====================================================
-//  Rota principal – consulta ao RAG
+//  Verificar se o script existe ao iniciar
+if (!fs.existsSync(scriptPath)) {
+    console.error('[AGENTE] ERRO: Script Python NAO encontrado em:', scriptPath);
+} else {
+    console.log('[AGENTE] Script Python encontrado');
+}
+
+// =====================================================
+//  Rota principal - consulta ao RAG
 router.post('/agente-consultar', async (req, res) => {
     try {
         const pergunta = req.body?.pergunta;
         if (!pergunta || typeof pergunta !== 'string' || pergunta.trim().length < 2) {
-            return res.status(400).json({ sucesso: false, erro: 'Pergunta inválida ou muito curta' });
+            return res.status(400).json({ sucesso: false, erro: 'Pergunta invalida ou muito curta' });
         }
 
         console.log('[AGENTE] Nova pergunta:', pergunta);
 
+        // Verificar se script existe
+        if (!fs.existsSync(scriptPath)) {
+            console.error('[AGENTE] Script Python nao encontrado');
+            return res.status(500).json({
+                sucesso: false,
+                erro: 'Script do assistente nao encontrado no servidor'
+            });
+        }
+
         const processo = spawn(pythonExecutable, [scriptPath, pergunta], {
             windowsHide: true,
-            env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+            env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+            cwd: path.resolve(__dirname, '../../python_rag')
         });
 
         let stdoutFull = '';
@@ -54,7 +78,7 @@ router.post('/agente-consultar', async (req, res) => {
         });
 
         processo.on('close', code => {
-            console.log(`[AGENTE] Processo Python fechado (código ${code})`);
+            console.log(`[AGENTE] Processo Python fechado (codigo ${code})`);
             if (res.headersSent) return;
 
             const respostaPronta = stdoutFull.trim();
@@ -62,7 +86,7 @@ router.post('/agente-consultar', async (req, res) => {
                 return res.json({ sucesso: true, resposta: respostaPronta });
             }
 
-            console.error('[AGENTE] Erro ou saída vazia');
+            console.error('[AGENTE] Erro ou saida vazia');
             console.error('[AGENTE-STDERR]', stderrFull);
             console.error('[AGENTE-STDOUT]', stdoutFull);
 
@@ -77,12 +101,12 @@ router.post('/agente-consultar', async (req, res) => {
                 console.error('[AGENTE] Falha ao iniciar Python:', err);
                 return res.status(500).json({
                     sucesso: false,
-                    erro: 'Falha ao iniciar o assistente. Verifique a configuração do Python.'
+                    erro: 'Falha ao iniciar o assistente. Verifique a configuracao do Python.'
                 });
             }
         });
 
-        // Timeout de segurança – 90s
+        // Timeout de seguranca - 90s
         setTimeout(() => {
             if (!res.headersSent) {
                 processo.kill('SIGKILL');

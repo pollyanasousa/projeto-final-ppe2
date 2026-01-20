@@ -1,0 +1,54 @@
+# Node.js
+node_modules
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache
+.coverage
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs
+
+# Frontend (não precisa no backend)
+frontend
+cypress
+docs
+
+# Documentação
+*.md
+CENARIOS_TESTE.md
+RELATORIO_EXECUCAO_TESTES.md
+GUIA_INSTALACAO.md
+
+# Environment local
+.env.local
+.env.development
+
+# Cache Python gerado localmente
+python_rag/cache_faiss.index
+python_rag/cache_store.pkl
+python_rag/venv
+python_rag/.venv

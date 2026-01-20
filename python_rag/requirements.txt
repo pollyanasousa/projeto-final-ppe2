@@ -1,9 +1,19 @@
-langchain>=0.2.45
-langchain-community>=0.4.1
-langchain-groq
-faiss-cpu
-pypdf
-sentence-transformers
-python-dotenv
-torch
-transformers
+# LangChain
+langchain==0.2.45
+langchain-community==0.4.1
+langchain-groq==0.2.12
+
+# Vector store e embeddings
+faiss-cpu==1.8.0
+sentence-transformers==2.3.1
+
+# PDF processing
+pypdf==4.0.1
+
+# Utilities
+python-dotenv==1.0.0
+
+# PyTorch CPU-only (economiza ~3GB!)
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0+cpu
+transformers==4.38.2
