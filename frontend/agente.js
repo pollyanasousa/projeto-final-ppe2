@@ -2,9 +2,6 @@
 // AGENTE.JS - ASSISTENTE CPM (FRONTEND) COM HISTÓRICO
 // =====================================================
 
-// URL do backend em produção (Render)
-const BACKEND_URL = 'https://projeto-final-ppe2.onrender.com';
-
 const agenteBtn = document.getElementById('agente-btn');
 const agenteChat = document.getElementById('agente-chat');
 const agenteFechar = document.getElementById('agente-fechar');
@@ -19,7 +16,6 @@ let aguardandoResposta = false;
 const MENSAGEM_INICIAL = `Olá! Sou o Assistente do Conservatório de Música de Pernambuco.
 
 Posso esclarecer dúvidas sobre o Processo Seletivo 2026.1:
-
 - Resultados de aprovados e remanejados
 - Documentação necessária para matrícula
 - Vagas disponíveis por instrumento e turno
@@ -36,17 +32,19 @@ const SUGESTOES = [
     "Qual o prazo para matrícula?"
 ];
 
+const API_URL = 'https://projeto-final-ppe2.onrender.com'; // URL do backend no Render
+
 function inicializarAgente() {
     adicionarMensagemBot(MENSAGEM_INICIAL, true);
-    
+
     agenteBtn.addEventListener('click', abrirChat);
     agenteFechar.addEventListener('click', fecharChat);
     agenteEnviar.addEventListener('click', enviarPergunta);
-    
+
     agenteInput.addEventListener('keypress', e => {
         if (e.key === 'Enter' && !aguardandoResposta) enviarPergunta();
     });
-    
+
     agenteMessages.addEventListener('click', e => {
         if (e.target.classList.contains('sugestao-btn')) {
             agenteInput.value = e.target.textContent;
@@ -67,18 +65,18 @@ function fecharChat() {
 function adicionarMensagemBot(texto, comSugestoes = false) {
     const div = document.createElement('div');
     div.className = 'message-bot';
-    
+
     const header = document.createElement('div');
     header.className = 'message-bot-header';
     header.textContent = 'Assistente CPM';
-    
+
     const textDiv = document.createElement('div');
     textDiv.className = 'message-bot-text';
     textDiv.textContent = texto;
-    
+
     div.appendChild(header);
     div.appendChild(textDiv);
-    
+
     if (comSugestoes) {
         const sugDiv = document.createElement('div');
         sugDiv.className = 'sugestoes';
@@ -90,7 +88,7 @@ function adicionarMensagemBot(texto, comSugestoes = false) {
         });
         div.appendChild(sugDiv);
     }
-    
+
     agenteMessages.appendChild(div);
     scrollParaFinal();
 }
@@ -110,7 +108,7 @@ function mostrarLoading() {
     const loading = document.createElement('div');
     loading.className = 'message-loading';
     loading.id = 'agente-loading';
-    
+
     const dots = document.createElement('div');
     dots.className = 'loading-dots';
     for (let i = 0; i < 3; i++) {
@@ -118,12 +116,12 @@ function mostrarLoading() {
         dot.className = 'loading-dot';
         dots.appendChild(dot);
     }
-    
+
     const text = document.createElement('span');
     text.textContent = 'Consultando documentos...';
     text.style.fontSize = '13px';
     text.style.color = '#666';
-    
+
     loading.appendChild(dots);
     loading.appendChild(text);
     agenteMessages.appendChild(loading);
@@ -139,82 +137,66 @@ function scrollParaFinal() {
     agenteMessages.scrollTop = agenteMessages.scrollHeight;
 }
 
-// Monta contexto da conversa
 function montarPerguntaComContexto(perguntaAtual) {
-    if (historicoConversa.length === 0) {
-        return perguntaAtual;
-    }
-    
+    if (historicoConversa.length === 0) return perguntaAtual;
+
     const ultimasMensagens = historicoConversa.slice(-3);
-    
     let contextoCompleto = '';
-    
     for (let msg of ultimasMensagens) {
-        if (msg.role === 'user') {
-            contextoCompleto += `Usuário perguntou: ${msg.content}\n`;
-        } else {
-            contextoCompleto += `Assistente respondeu: ${msg.content}\n`;
-        }
+        contextoCompleto += msg.role === 'user'
+            ? `Usuário perguntou: ${msg.content}\n`
+            : `Assistente respondeu: ${msg.content}\n`;
     }
-    
     contextoCompleto += `\nNova pergunta do usuário: ${perguntaAtual}`;
-    
     return contextoCompleto;
 }
 
 async function enviarPergunta() {
     const pergunta = agenteInput.value.trim();
     if (!pergunta || aguardandoResposta) return;
-    
+
     aguardandoResposta = true;
     agenteInput.disabled = true;
-    agenteEnviar.disabled = false;
-    
+    agenteEnviar.disabled = true;
+
     adicionarMensagemUsuario(pergunta);
     agenteInput.value = '';
     mostrarLoading();
-    
-    historicoConversa.push({
-        role: 'user',
-        content: pergunta
-    });
-    
+
+    historicoConversa.push({ role: 'user', content: pergunta });
+
     try {
         const perguntaComContexto = montarPerguntaComContexto(pergunta);
-        
-        // Chamada para backend em produção usando domínio Render correto
-        const response = await fetch(`${BACKEND_URL}/api/agente-consultar`, {
+
+        const response = await fetch(`${API_URL}/api/agente-consultar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pergunta: perguntaComContexto })
         });
-        
+
         removerLoading();
-        
+
         if (!response.ok) throw new Error('Erro na API');
-        
+
         const data = await response.json();
-        
+
         if (data.sucesso) {
             adicionarMensagemBot(data.resposta);
-            
-            historicoConversa.push({
-                role: 'assistant',
-                content: data.resposta
-            });
-            
-            if (historicoConversa.length > 10) {
+            historicoConversa.push({ role: 'assistant', content: data.resposta });
+
+            if (historicoConversa.length > 10)
                 historicoConversa = historicoConversa.slice(-10);
-            }
+
         } else {
             adicionarMensagemBot('Erro ao processar sua pergunta. Tente novamente.');
         }
+
     } catch (err) {
         removerLoading();
         adicionarMensagemBot('Falha de conexão com o servidor. Verifique se o backend está rodando.');
         console.error(err);
     }
-    
+
     aguardandoResposta = false;
     agenteInput.disabled = false;
     agenteEnviar.disabled = false;
@@ -227,4 +209,4 @@ if (document.readyState === 'loading') {
     inicializarAgente();
 }
 
-console.log('=== AGENTE CPM FRONTEND COM HISTÓRICO PRONTO ===');
+console.log('=== AGENTE CPM FRONTEND PRONTO PARA PRODUÇÃO ===');
