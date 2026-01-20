@@ -5,7 +5,7 @@
 Autor: Pollyana Sousa
 Data: Janeiro/2026
 Descrição: RAG com Groq para consultas sobre editais CPM
-Versão: 3.0 - Limpeza de texto aprimorada
+Versão: 3.2 - Ajustes para deploy no Render sem emojis
 """
 import os
 import sys
@@ -13,6 +13,8 @@ import pickle
 import re
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Importações LangChain
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
@@ -21,25 +23,33 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # ============================================================
-# CARREGAR VARIÁVEIS DE AMBIENTE
+# 1. CARREGAR VARIÁVEIS DE AMBIENTE
 # ============================================================
+# Render define variáveis de ambiente automaticamente
+# Localmente, usamos .env
 env_path = Path(__file__).parent.parent / "backend" / ".env"
-load_dotenv(dotenv_path=env_path)
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    print("Erro: GROQ_API_KEY não configurada.")
+    sys.exit(1)
 
 # ============================================================
-# 1. CACHE DO VETOR FAISS
+# 2. CACHE DO VETOR FAISS
 # ============================================================
 CACHE_FAISS = Path(__file__).parent / "cache_faiss.index"
 CACHE_STORE = Path(__file__).parent / "cache_store.pkl"
 
 def salvar_cache(base):
-    """Salva FAISS + metadata no disco"""
+    """Salva FAISS e metadata no disco"""
     base.save_local(str(CACHE_FAISS))
     with open(CACHE_STORE, "wb") as f:
         pickle.dump(base.docstore, f)
 
 def carregar_cache():
-    """Carrega FAISS do disco, se existir"""
+    """Carrega FAISS do disco se existir"""
     if CACHE_FAISS.exists() and CACHE_STORE.exists():
         try:
             embeddings = HuggingFaceEmbeddings(
@@ -52,243 +62,139 @@ def carregar_cache():
             )
             with open(CACHE_STORE, "rb") as f:
                 base.docstore = pickle.load(f)
-            print("✓ Cache FAISS carregado", file=sys.stderr)
+            print("Cache FAISS carregado", file=sys.stderr)
             return base
-        except:
+        except Exception as e:
             print("Cache inválido, reconstruindo...", file=sys.stderr)
+            print(e, file=sys.stderr)
             return None
     return None
 
 # ============================================================
-# 2. LIMPEZA PROFUNDA DE TEXTO
+# 3. LIMPEZA PROFUNDA DE TEXTO
 # ============================================================
 def limpar_texto_pdf(texto):
-    """
-    Limpa e normaliza texto extraído de PDF
-    PROBLEMA IDENTIFICADO: PDFs têm espaços múltiplos entre palavras
-    """
-    # 1. Normalizar encoding
+    """Limpa e normaliza texto extraído de PDF"""
     try:
         texto = texto.encode("latin-1", "ignore").decode("utf-8", "ignore")
     except:
         pass
-    
-    # 2. Remover hifenização de quebra de linha
+    # Remover hifenização de quebra de linha
     texto = re.sub(r"(\w)-\s*\n\s*(\w)", r"\1\2", texto)
-    
-    # 3. CRÍTICO: Substituir múltiplos espaços por espaço único
-    # Isso corrige o problema "de   2025" -> "de 2025"
+    # Substituir múltiplos espaços por espaço único
     texto = re.sub(r'\s+', ' ', texto)
-    
-    # 4. Juntar palavras separadas por quebra de linha
+    # Juntar palavras separadas por quebra de linha
     texto = re.sub(r'(\w)\s*\n\s*(\w)', r'\1 \2', texto)
-    
-    # 5. Remover quebras de linha excessivas
+    # Remover quebras de linha excessivas
     texto = re.sub(r'\n\s*\n\s*\n+', '\n\n', texto)
-    
-    # 6. Remover cabeçalhos e rodapés comuns
+    # Remover cabeçalhos e rodapés comuns
     texto = re.sub(r'Página\s+\d+\s+de\s+\d+', '', texto, flags=re.I)
     texto = re.sub(r'CPM\s+-\s+Conservatório.*?\n', '', texto, flags=re.I)
-    
-    # 7. Limpar espaços no início e fim
-    texto = texto.strip()
-    
-    return texto
+    return texto.strip()
 
 # ============================================================
-# 3. CARREGAR PDFs COM LIMPEZA APRIMORADA
+# 4. CARREGAR PDFs COM LIMPEZA APRIMORADA
 # ============================================================
 def carregar_pdfs_cpm():
-    """Carrega todos os PDFs e cria FAISS se não houver cache."""
-
-    # Tenta usar cache primeiro
+    """Carrega PDFs e cria FAISS se não houver cache"""
     cache = carregar_cache()
     if cache:
         return cache
 
     pasta_dados = Path(__file__).parent / "dados"
-    lista_pdfs = [f.name for f in pasta_dados.glob("*.pdf")]
+    if not pasta_dados.exists():
+        raise Exception(f"Pasta de dados não encontrada: {pasta_dados}")
+
+    lista_pdfs = list(pasta_dados.glob("*.pdf"))
+    if not lista_pdfs:
+        raise Exception("Nenhum PDF encontrado em 'dados/'.")
 
     documentos = []
 
-    for nome_pdf in lista_pdfs:
-        caminho_pdf = pasta_dados / nome_pdf
-
-        if not caminho_pdf.exists():
-            print(f"AVISO: PDF não encontrado: {caminho_pdf}", file=sys.stderr)
-            continue
-
+    for pdf_path in lista_pdfs:
         try:
-            loader = PyPDFLoader(str(caminho_pdf))
+            loader = PyPDFLoader(str(pdf_path))
             docs_brutos = loader.load()
-
-            # APLICAR LIMPEZA PROFUNDA
             for d in docs_brutos:
                 d.page_content = limpar_texto_pdf(d.page_content)
 
-            # Chunks otimizados
+            # Divisão em chunks
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=600,
                 chunk_overlap=150,
                 separators=["\n\n", "\n", ". ", " ", ""]
             )
-
             docs_divididos = text_splitter.split_documents(docs_brutos)
             documentos.extend(docs_divididos)
-
-            print(f"✓ Carregado: {nome_pdf} ({len(docs_divididos)} trechos)",
-                  file=sys.stderr)
-
+            print(f"Carregado: {pdf_path.name} ({len(docs_divididos)} trechos)", file=sys.stderr)
         except Exception as e:
-            print(f"ERRO ao carregar {nome_pdf}: {str(e)}", file=sys.stderr)
-
-    if not documentos:
-        raise Exception("Nenhum documento foi carregado.")
+            print(f"Erro ao carregar {pdf_path.name}: {e}", file=sys.stderr)
 
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
     )
-
     base = FAISS.from_documents(documentos, embeddings)
-
-    # Salvar cache
     salvar_cache(base)
-
     return base
 
-
 # ============================================================
-# 4. PROMPT OTIMIZADO
+# 5. PROMPT DO AGENTE
 # ============================================================
 prompt_principal = ChatPromptTemplate.from_messages([
     ("system", """
-Você é o Assistente CPM do Conservatório de Música de Pernambuco. Você ajuda candidatos com dúvidas sobre o Processo Seletivo 2026.1.
-
-REGRAS FUNDAMENTAIS:
-1. Use APENAS informações que estão no contexto fornecido
-2. Responda de forma DIRETA e OBJETIVA
-3. Cite datas, horários e documentos EXATAMENTE como aparecem
-4. NUNCA diga "não encontrei" se a informação estiver no contexto
-
-ENTENDENDO TERMOS DO PROCESSO SELETIVO:
-• INSCRIÇÃO = período para se inscrever no processo seletivo
-• MATRÍCULA = período para efetivar a vaga após aprovação
-• APROVADOS = lista de quem passou no processo
-• REMANEJAMENTO = preenchimento de vagas não ocupadas
-
-DIFERENCIAÇÃO REGULAR vs TÉCNICO:
-• Se pergunta mencionar "regular" ou "técnico" → responda sobre esse curso
-• Se pergunta for genérica sobre matrícula/documentos/vagas/horários SEM especificar:
-  → Pergunte: "Você quer saber sobre o curso REGULAR ou TÉCNICO?"
-
-COMO RESPONDER:
-• Se encontrar a informação no contexto: responda completamente
-• Se a informação estiver PARCIAL: forneça o que houver
-• Se realmente NÃO houver a informação: "Não encontrei essa informação específica nos editais."
-
-FORMATAÇÃO:
-• Texto direto, sem emojis
-• Use parágrafos curtos
-• SEMPRE termine com a fonte dos documentos consultados
-• Se usar 1 fonte: "Fonte: Nome do Documento"
-• Se usar 2+ fontes: "Fontes consultadas:" com cada fonte em uma linha iniciada por hífen (-)
+Você é o Assistente CPM. Responda com base apenas nos documentos fornecidos.
+Responda de forma direta e objetiva, cite datas e documentos exatamente.
+Nunca invente respostas.
 """),
-
     ("user", """
 DOCUMENTOS DISPONÍVEIS:
 {contexto}
 
 PERGUNTA DO CANDIDATO:
 {input}
-
-Responda com base nos documentos acima. Se a informação estiver presente, forneça-a completamente.
 """)
 ])
 
 # ============================================================
-# 5. BUSCA OTIMIZADA
+# 6. FUNÇÕES DE BUSCA
 # ============================================================
 def extrair_termos_chave(pergunta):
-    """Extrai termos importantes da pergunta"""
+    """Extrai palavras relevantes ignorando stopwords"""
     stopwords = {
-        'o', 'a', 'os', 'as', 'de', 'da', 'do', 'das', 'dos',
-        'um', 'uma', 'uns', 'umas', 'para', 'com', 'em', 'no', 
-        'na', 'nos', 'nas', 'qual', 'quais', 'quando', 'onde',
-        'como', 'que', 'é', 'são', 'sobre', 'pelo', 'pela'
+        'o','a','os','as','de','da','do','das','dos','um','uma','uns','umas',
+        'para','com','em','no','na','nos','nas','qual','quais','quando','onde',
+        'como','que','é','são','sobre','pelo','pela'
     }
-    
-    palavras = pergunta.lower().split()
-    return [p for p in palavras if p not in stopwords and len(p) > 2]
+    return [p for p in pergunta.lower().split() if p not in stopwords and len(p) > 2]
 
 def consultar_agente(base, pergunta, modelo):
     """Busca otimizada com limpeza de texto"""
-    
-    # Busca semântica ampla
     docs_score = base.similarity_search_with_score(pergunta, k=50)
-    
-    # Busca por termos-chave
     termos = extrair_termos_chave(pergunta)
-    if termos:
-        query_termos = " ".join(termos)
-        docs_termos = base.similarity_search_with_score(query_termos, k=30)
-    else:
-        docs_termos = []
-    
-    # Debug
-    print(f"\n🔍 Buscando: '{pergunta}'", file=sys.stderr)
-    print(f"📊 Termos extraídos: {termos}", file=sys.stderr)
-    print(f"📄 Top 5 resultados:", file=sys.stderr)
-    
-    for i, (doc, score) in enumerate(docs_score[:5]):
-        fonte = Path(doc.metadata.get('source', 'desconhecido')).name
-        preview = doc.page_content[:100].replace('\n', ' ')
-        print(f"  {i+1}. [{score:.3f}] {fonte[:40]}...", file=sys.stderr)
-        print(f"     {preview}...", file=sys.stderr)
-    
-    # Combinar resultados
+    docs_termos = base.similarity_search_with_score(" ".join(termos), k=30) if termos else []
+    todos_docs = sorted(docs_score + docs_termos, key=lambda x: x[1])
     contexto = []
     docs_vistos = set()
-    
-    # Ordenar por relevância (score menor = melhor)
-    todos_docs = sorted(docs_score + docs_termos, key=lambda x: x[1])
-    
     for doc, score in todos_docs:
-        # Threshold MUITO permissivo - baseado nos testes (scores vão até 7.0+)
         if score > 8.0:
             continue
-        
-        # Evitar duplicatas
         doc_hash = hash(doc.page_content[:150])
         if doc_hash in docs_vistos:
             continue
         docs_vistos.add(doc_hash)
-        
         fonte = Path(doc.metadata.get("source", "")).name
         contexto.append(f"[{fonte}]\n{doc.page_content}\n")
-        
         if len(contexto) >= 20:
             break
-    
-    print(f"✓ Contexto final: {len(contexto)} documentos selecionados", file=sys.stderr)
-    
     if not contexto:
-        return "Não encontrei informações relevantes sobre essa pergunta nos editais. Poderia reformular ou ser mais específico?"
-    
+        return "Não encontrei informações relevantes nos editais."
     contexto_final = "\n---\n".join(contexto)
-    
-    # Invocar modelo
     chain = prompt_principal | modelo
-    
-    resposta = chain.invoke({
-        "contexto": contexto_final,
-        "input": pergunta
-    })
-    
+    resposta = chain.invoke({"contexto": contexto_final, "input": pergunta})
     return resposta.content.strip()
 
-
 # ============================================================
-# 6. MAIN
+# 7. MAIN
 # ============================================================
 def main():
     if len(sys.argv) < 2:
@@ -296,35 +202,20 @@ def main():
         sys.exit(1)
 
     pergunta = sys.argv[1]
-    chave = os.getenv("GROQ_API_KEY")
-
-    if not chave:
-        print("Erro: GROQ_API_KEY não configurada.")
-        sys.exit(1)
 
     try:
-        print("🚀 Inicializando Agente CPM...", file=sys.stderr)
-        
-        modelo = ChatGroq(
-            api_key=chave,
-            model="llama-3.3-70b-versatile",
-            temperature=0.1
-        )
-
-        print("📚 Carregando editais...", file=sys.stderr)
+        print("Inicializando Agente CPM...", file=sys.stderr)
+        modelo = ChatGroq(api_key=GROQ_API_KEY, model="llama-3.3-70b-versatile", temperature=0.1)
+        print("Carregando editais...", file=sys.stderr)
         base = carregar_pdfs_cpm()
-
-        print(f"💬 Consultando...", file=sys.stderr)
+        print("Consultando...", file=sys.stderr)
         resposta = consultar_agente(base, pergunta, modelo)
-
         print("\n" + resposta)
-
     except Exception as e:
-        print(f"ERRO: {e}", file=sys.stderr)
+        print(f"Erro: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

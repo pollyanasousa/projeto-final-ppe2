@@ -2,6 +2,9 @@
 // AGENTE.JS - ASSISTENTE CPM (FRONTEND) COM HISTÓRICO
 // =====================================================
 
+// URL do backend em produção (Render)
+const BACKEND_URL = 'https://projeto-final-ppe2.onrender.com';
+
 const agenteBtn = document.getElementById('agente-btn');
 const agenteChat = document.getElementById('agente-chat');
 const agenteFechar = document.getElementById('agente-fechar');
@@ -9,7 +12,7 @@ const agenteMessages = document.getElementById('agente-messages');
 const agenteInput = document.getElementById('agente-input');
 const agenteEnviar = document.getElementById('agente-enviar');
 
-// NOVO: Armazenar histórico da conversa
+// Histórico da conversa
 let historicoConversa = [];
 let aguardandoResposta = false;
 
@@ -136,13 +139,12 @@ function scrollParaFinal() {
     agenteMessages.scrollTop = agenteMessages.scrollHeight;
 }
 
-// FUNÇÃO MELHORADA: Monta contexto da conversa
+// Monta contexto da conversa
 function montarPerguntaComContexto(perguntaAtual) {
     if (historicoConversa.length === 0) {
         return perguntaAtual;
     }
     
-    // Pega as últimas 3 mensagens para contexto
     const ultimasMensagens = historicoConversa.slice(-3);
     
     let contextoCompleto = '';
@@ -166,28 +168,25 @@ async function enviarPergunta() {
     
     aguardandoResposta = true;
     agenteInput.disabled = true;
-    agenteEnviar.disabled = true;
+    agenteEnviar.disabled = false;
     
     adicionarMensagemUsuario(pergunta);
     agenteInput.value = '';
     mostrarLoading();
     
-    // Adiciona pergunta ao histórico
     historicoConversa.push({
         role: 'user',
         content: pergunta
     });
     
     try {
-        // NOVO: Envia pergunta com contexto da conversa
         const perguntaComContexto = montarPerguntaComContexto(pergunta);
         
-        const response = await fetch("http://localhost:3000/api/agente-consultar", {
+        // Chamada para backend em produção usando domínio Render correto
+        const response = await fetch(`${BACKEND_URL}/api/agente-consultar`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                pergunta: perguntaComContexto
-            })
+            body: JSON.stringify({ pergunta: perguntaComContexto })
         });
         
         removerLoading();
@@ -199,13 +198,11 @@ async function enviarPergunta() {
         if (data.sucesso) {
             adicionarMensagemBot(data.resposta);
             
-            // Adiciona resposta ao histórico
             historicoConversa.push({
                 role: 'assistant',
                 content: data.resposta
             });
             
-            // Limita histórico a 10 mensagens
             if (historicoConversa.length > 10) {
                 historicoConversa = historicoConversa.slice(-10);
             }

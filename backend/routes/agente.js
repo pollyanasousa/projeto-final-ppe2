@@ -1,11 +1,11 @@
 // =====================================================
-// AGENTE.JS - ROTA DO ASSISTENTE IA (RAG + GROQ)
-// =====================================================
-// CORREÇÕES APLICADAS:
-// 1. Confirmado uso do venv principal (não venv_agente)
-// 2. Melhor tratamento de erros
-// 3. Logs mais detalhados para debug
-// 4. Timeout ajustado para 90s (RAG pode demorar)
+//  AGENTE.JS — Endpoint do Assistente IA (RAG + GROQ)
+// -----------------------------------------------------
+//  Este módulo integra o backend Node.js ao script Python
+//  responsável por executar o RAG (busca + embeddings +
+//  modelo da Groq). A rota POST /api/agente-consultar
+//  recebe uma pergunta e devolve a resposta gerada pelo
+//  pipeline em Python.
 // =====================================================
 
 const express = require('express');
@@ -14,32 +14,39 @@ const { spawn } = require('child_process');
 const path = require('path');
 
 // =====================================================
-// CAMINHOS DO PYTHON + SCRIPT
+//  CAMINHOS DO PYTHON E DO SCRIPT DO RAG
+// -----------------------------------------------------
+//  Localiza automaticamente o executável do Python dentro
+//  da venv, tanto no Windows quanto em Linux. Esse Python
+//  é quem executa o arquivo agente_cpm.py.
 // =====================================================
 
-// Script Python do RAG
+// Caminho do script Python do RAG
 const scriptPath = path.resolve(__dirname, '../../python_rag/agente_cpm.py');
 
-// ✅ USANDO VENV PRINCIPAL (não venv_agente)
-// Detecta Python da venv corretamente (Windows ou Linux)
+// Seleção do executável Python dentro da venv
 const pythonExecutable =
     process.platform === 'win32'
         ? path.resolve(__dirname, '../../python_rag/venv/Scripts/python.exe')
         : path.resolve(__dirname, '../../python_rag/venv/bin/python');
 
-// Log para conferência
-console.log('[AGENTE] Python:', pythonExecutable);
-console.log('[AGENTE] Script:', scriptPath);
+// Logs de diagnóstico (úteis para deploy)
+console.log('[AGENTE] Python em uso:', pythonExecutable);
+console.log('[AGENTE] Script carregado:', scriptPath);
 
 // =====================================================
-// ROTA PRINCIPAL DO ASSISTENTE
+//  ROTA PRINCIPAL — EXECUÇÃO DO ASSISTENTE
+// -----------------------------------------------------
+//  Recebe uma pergunta do usuário e inicia um processo
+//  Python para rodar o pipeline RAG. Toda comunicação com
+//  o Python é feita via STDOUT (resposta) e STDERR (erros).
 // =====================================================
 
 router.post('/agente-consultar', async (req, res) => {
     try {
         const pergunta = req.body?.pergunta;
 
-        // ✅ VALIDAÇÃO MELHORADA
+        // Validação simples e robusta da entrada
         if (!pergunta || typeof pergunta !== 'string' || pergunta.trim().length < 2) {
             return res.status(400).json({
                 sucesso: false,
@@ -47,54 +54,59 @@ router.post('/agente-consultar', async (req, res) => {
             });
         }
 
-        console.log('[AGENTE] NOVA PERGUNTA:', pergunta);
+        console.log('[AGENTE] Nova pergunta recebida:', pergunta);
 
-        // ==============================
-        // Executa Python como child process
-        // ==============================
+        // -----------------------------------------------------
+        //  Inicialização do processo Python
+        //  Usamos spawn para permitir streaming de logs
+        // -----------------------------------------------------
         const processo = spawn(pythonExecutable, [scriptPath, pergunta], {
             windowsHide: true,
-            // ✅ Garante que encoding seja UTF-8
             env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
         });
 
-        let stdoutFull = '';
-        let stderrFull = '';
+        let stdoutFull = ''; // resposta final da IA
+        let stderrFull = ''; // erros e logs do Python
 
-        // ✅ CAPTURA SAÍDA PADRÃO (resposta da IA)
+        // -----------------------------------------------------
+        //  STDOUT — resposta produzida pelo script Python
+        // -----------------------------------------------------
         processo.stdout.on('data', data => {
             const texto = data.toString('utf8');
             stdoutFull += texto;
             console.log('[AGENTE-STDOUT]', texto.trim());
         });
 
-        // ✅ CAPTURA ERROS DO PYTHON (logs de debug)
+        // -----------------------------------------------------
+        //  STDERR — logs, avisos e erros do Python
+        // -----------------------------------------------------
         processo.stderr.on('data', data => {
             const msg = data.toString('utf8').trim();
             stderrFull += msg + '\n';
             console.log('[AGENTE-STDERR]', msg);
         });
 
-        // ==============================
-        // FINALIZAÇÃO DO PROCESSO PYTHON
-        // ==============================
+        // -----------------------------------------------------
+        //  Finalização do processo Python
+        // -----------------------------------------------------
         processo.on('close', code => {
+            console.log(`[AGENTE] Processo Python fechado (código ${code})`);
             if (res.headersSent) return;
 
-            console.log(`[AGENTE] Python finalizou com código ${code}`);
+            const respostaPronta = stdoutFull.trim();
 
-            // ✅ SUCESSO: Código 0 e resposta não vazia
-            if (code === 0 && stdoutFull.trim() !== '') {
+            // Caso tudo tenha ido bem
+            if (code === 0 && respostaPronta) {
                 return res.json({
                     sucesso: true,
-                    resposta: stdoutFull.trim()
+                    resposta: respostaPronta
                 });
             }
 
-            // ❌ ERRO: Processo falhou ou resposta vazia
-            console.error('[AGENTE] Python retornou erro ou saída vazia.');
-            console.error('[AGENTE] STDERR:', stderrFull);
-            console.error('[AGENTE] STDOUT:', stdoutFull);
+            // Caso o script finalize sem erro mas sem resposta
+            console.error('[AGENTE] Erro: saída vazia ou código != 0');
+            console.error('[AGENTE-STDERR]', stderrFull);
+            console.error('[AGENTE-STDOUT]', stdoutFull);
 
             return res.status(500).json({
                 sucesso: false,
@@ -102,36 +114,41 @@ router.post('/agente-consultar', async (req, res) => {
             });
         });
 
-        // ✅ ERRO: Falha ao iniciar processo
+        // -----------------------------------------------------
+        //  Tratamento de erro ao iniciar o processo Python
+        // -----------------------------------------------------
         processo.on('error', err => {
             if (!res.headersSent) {
-                console.error('[AGENTE] ERRO AO INICIAR PYTHON:', err);
+                console.error('[AGENTE] Falha ao iniciar Python:', err);
                 return res.status(500).json({
                     sucesso: false,
-                    erro: 'Falha ao iniciar o assistente. Verifique se o Python está configurado.'
+                    erro: 'Falha ao iniciar o assistente. Verifique a configuração do Python.'
                 });
             }
         });
 
-        // ==============================
-        // TIMEOUT AJUSTADO: 90s
-        // ==============================
-        // RAG + embeddings + Groq podem demorar, especialmente no primeiro carregamento
+        // -----------------------------------------------------
+        //  TIMEOUT — segurança para evitar travamento do servidor
+        // -----------------------------------------------------
+        //  Como o primeiro carregamento do RAG é pesado, o tempo
+        //  limite foi definido em 90s.
+// -----------------------------------------------------
         setTimeout(() => {
             if (!res.headersSent) {
                 processo.kill('SIGKILL');
-                console.log('[AGENTE] PROCESSO FINALIZADO POR TIMEOUT (90s)');
-
+                console.log('[AGENTE] Processo encerrado por timeout (90s)');
                 return res.status(504).json({
                     sucesso: false,
-                    erro: 'Tempo limite excedido. O assistente está demorando muito para responder.'
+                    erro: 'Tempo limite excedido. O assistente demorou demais para responder.'
                 });
             }
-        }, 90000); // 90 segundos
+        }, 90000);
 
     } catch (error) {
-        console.error('[AGENTE] ERRO INTERNO:', error);
-
+        // -----------------------------------------------------
+        //  Fallback para erros não tratados
+        // -----------------------------------------------------
+        console.error('[AGENTE] Erro inesperado:', error);
         if (!res.headersSent) {
             res.status(500).json({
                 sucesso: false,

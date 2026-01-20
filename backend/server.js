@@ -1,5 +1,8 @@
 // =====================================================
-// SERVER.JS - API BACKEND NODE.JS + EXPRESS + MONGODB
+//  SERVER.JS  —  Backend Node.js + Express + MongoDB
+//  Este servidor expõe a API usada pelo Conservatório PE,
+//  incluindo: consulta ao agente (RAG Python), verificação
+//  de inadimplência, listagem de cursos e registro de matrículas.
 // =====================================================
 
 const express = require('express');
@@ -12,37 +15,43 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =====================================================
-// MIDDLEWARE
+//  MIDDLEWARES
 // =====================================================
 
-// Permite que o frontend se conecte de qualquer origem
+// Configura CORS para permitir acesso do frontend
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type']
 }));
 
+// Permite JSON no corpo das requisições
 app.use(express.json({ limit: '2mb' }));
 
-// Força UTF-8 em todas as respostas JSON
+// Garante que todas respostas JSON usem UTF-8
 app.use((req, res, next) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     next();
 });
 
-// =====================================================
-// SERVIR FRONTEND ESTÁTICO (OPCIONAL)
-// =====================================================
-// Se você quiser que o Node sirva o HTML, JS e CSS
+// -----------------------------------------------------
+// Caso no futuro você queira servir o frontend pelo Node,
+// basta descomentar a linha abaixo.
+// -----------------------------------------------------
 // app.use(express.static(path.join(__dirname, '../frontend')));
 
+// =====================================================
+//  VARIÁVEIS GLOBAIS DO BANCO
+// =====================================================
 let db;
 let inadimplentesCollection;
 let candidatosCollection;
 let cursosCollection;
 
 // =====================================================
-// CONEXÃO MONGO DB ATLAS
+//  CONEXÃO COM O MONGO DB ATLAS
+// =====================================================
+//  Estabelece conexão com o cluster e inicializa as coleções.
 // =====================================================
 const connectDB = async () => {
     try {
@@ -56,12 +65,15 @@ const connectDB = async () => {
 
     } catch (error) {
         console.error('Erro ao conectar no MongoDB:', error);
-        process.exit(1);
+        process.exit(1); // Encerra o servidor se o banco não conectar
     }
 };
 
 // =====================================================
-// ROTAS PRINCIPAIS
+//  ROTA DE STATUS DA API
+// =====================================================
+//  Serve como endpoint de diagnóstico para verificar se a API
+//  está online e listar os serviços disponíveis.
 // =====================================================
 app.get('/', (req, res) => {
     res.json({
@@ -77,13 +89,19 @@ app.get('/', (req, res) => {
 });
 
 // =====================================================
-// ROTAS DO AGENTE (RAG + PYTHON)
+//  ROTAS DO AGENTE (RAG EM PYTHON)
+// =====================================================
+//  Aqui integramos o backend Node ao script Python que analisa
+//  documentos do edital via modelo Groq.
 // =====================================================
 const agenteRoutes = require('./routes/agente');
 app.use('/api', agenteRoutes);
 
 // =====================================================
-// VERIFICAR INADIMPLÊNCIA
+//  VERIFICAR INADIMPLÊNCIA
+// =====================================================
+//  Recebe um CPF e verifica no MongoDB se o candidato possui
+//  pendências financeiras no Conservatório.
 // =====================================================
 app.get('/api/verificar-inadimplencia', async (req, res) => {
     try {
@@ -96,6 +114,7 @@ app.get('/api/verificar-inadimplencia', async (req, res) => {
         const cpfLimpo = cpf.replace(/\D/g, '');
         const inadimplente = await inadimplentesCollection.findOne({ cpf: cpfLimpo });
 
+        // Registro localizado
         if (inadimplente) {
             if (inadimplente.status === 'QUITADO') {
                 return res.json({ sucesso: true, inadimplente: false, mensagem: 'Débito quitado' });
@@ -103,7 +122,9 @@ app.get('/api/verificar-inadimplencia', async (req, res) => {
             return res.json({ sucesso: true, inadimplente: true, dados: inadimplente });
         }
 
+        // CPF sem pendências
         return res.json({ sucesso: true, inadimplente: false, mensagem: 'CPF sem pendências' });
+
     } catch (error) {
         console.error('Erro ao verificar inadimplência:', error);
         res.status(500).json({ sucesso: false, erro: 'Erro interno do servidor' });
@@ -111,15 +132,22 @@ app.get('/api/verificar-inadimplencia', async (req, res) => {
 });
 
 // =====================================================
-// REGISTRAR MATRÍCULA
+//  REGISTRAR MATRÍCULA
+// =====================================================
+//  Registra a inscrição/matrícula de um aluno no banco,
+//  gerando um protocolo único e salvando todos os dados
+//  pessoais e do curso escolhido.
 // =====================================================
 app.post('/api/inscricao', async (req, res) => {
     try {
         const dados = req.body;
+
+        // Geração do protocolo (ex: CONS-2026-01234)
         const ano = new Date().getFullYear();
         const numero = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
         const protocolo = `CONS-${ano}-${numero}`;
 
+        // Documento a ser salvo no banco
         const matricula = {
             protocolo,
             aluno: {
@@ -155,10 +183,12 @@ app.post('/api/inscricao', async (req, res) => {
             taxaMatricula: dados.solicitaIsencao ? 0 : 40.0
         };
 
+        // Inserção no banco
         const matriculasCollection = db.collection('matriculas');
         await matriculasCollection.insertOne(matricula);
 
         res.json({ sucesso: true, protocolo, mensagem: 'Matrícula registrada' });
+
     } catch (error) {
         console.error('Erro ao registrar matrícula:', error);
         res.status(500).json({ sucesso: false, erro: 'Erro ao registrar matrícula' });
@@ -166,7 +196,10 @@ app.post('/api/inscricao', async (req, res) => {
 });
 
 // =====================================================
-// LISTAR CURSOS
+//  LISTAR CURSOS DISPONÍVEIS
+// =====================================================
+//  Retorna apenas os cursos marcados como "ativo: true"
+//  no banco de dados.
 // =====================================================
 app.get('/api/cursos', async (req, res) => {
     try {
@@ -179,13 +212,14 @@ app.get('/api/cursos', async (req, res) => {
 });
 
 // =====================================================
-// INICIALIZAR SERVIDOR
+//  INICIALIZAÇÃO DO SERVIDOR
+// =====================================================
+//  Conecta ao banco e só depois inicia o servidor Express.
 // =====================================================
 const startServer = async () => {
     await connectDB();
     app.listen(PORT, () => {
         console.log(`Servidor rodando em http://localhost:${PORT}`);
-        console.log('⚠️ Certifique-se de que o frontend use fetch para localhost:3000 ou via proxy');
     });
 };
 
