@@ -13,7 +13,6 @@ pypdf==4.0.1
 # Utilities
 python-dotenv==1.0.0
 
-# PyTorch CPU-only (economiza ~3GB!)
---index-url https://download.pytorch.org/whl/cpu
-torch==2.2.0+cpu
+# PyTorch CPU-only (linha separada, sem index customizado)
+torch==2.2.0
 transformers==4.38.2
