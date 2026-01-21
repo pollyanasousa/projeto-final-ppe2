@@ -1,27 +1,24 @@
-FROM node:18-alpine
+FROM node:18-slim
 
-# Dependências de sistema
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     python3 \
-    py3-pip \
-    make \
-    g++ \
-    && python3 -m venv /opt/venv
+    python3-venv \
+    python3-pip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Ativa o venv
+RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Node
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then \
       npm ci --omit=dev; \
     else \
       npm install --omit=dev; \
-    fi && npm cache clean --force
+    fi
 
-# Python
 COPY python_rag/requirements.txt ./python_rag/
 RUN pip install --no-cache-dir -r python_rag/requirements.txt
 
