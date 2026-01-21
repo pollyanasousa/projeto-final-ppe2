@@ -2,14 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Instalar dependências do sistema (se precisar de Python/C++)
+# Instalar dependências do sistema
 RUN apk add --no-cache python3 make g++
 
-# Copiar package.json
-COPY package*.json ./
+# Copiar package files
+COPY package.json package-lock.json ./
 
-# Instalar apenas produção e limpar cache
-RUN npm ci --only=production && npm cache clean --force
+# Instalar dependências (sem --only, use --omit)
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copiar código
 COPY . .
