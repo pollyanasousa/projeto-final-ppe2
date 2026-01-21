@@ -1,8 +1,12 @@
+# ============================================
+# .DOCKERIGNORE FINAL - CONSERVATÓRIO
+# Arquivos que NÃO devem ir para a imagem
+# ============================================
+
 # Node.js
 node_modules
 npm-debug.log
 yarn.lock
-package-lock.json
 .npm
 .node_repl_history
 
@@ -18,17 +22,21 @@ __pycache__
 .pytest_cache
 .coverage
 pip-log.txt
-pip-delete-this-directory.txt
 .tox
 .nox
-.hypothesis
-.pytype
 venv
 env
 ENV
 *.egg-info
 dist
 build
+
+# Python RAG - Cache e venv
+python_rag/venv
+python_rag/.venv
+python_rag/__pycache__
+python_rag/cache_faiss.index
+python_rag/cache_store.pkl
 
 # Git
 .git
@@ -48,40 +56,29 @@ build
 *.log
 logs
 
-# Frontend (não precisa no backend)
+# Frontend e Testes
 frontend
 cypress
 cypress.json
-docs
-public
+tests
+*.test.js
+*.spec.js
+coverage
 
 # Documentação
+docs
 *.md
-CENARIOS_TESTE.md
-RELATORIO_EXECUCAO_TESTES.md
-GUIA_INSTALACAO.md
 README.md
 LICENSE
 CHANGELOG.md
+CENARIOS_TESTE.md
+RELATORIO_EXECUCAO_TESTES.md
+GUIA_INSTALACAO.md
 
 # Environment local
 .env.local
 .env.development
 .env.test
-
-# Cache Python gerado localmente
-python_rag/cache_faiss.index
-python_rag/cache_store.pkl
-python_rag/venv
-python_rag/.venv
-python_rag/__pycache__
-
-# Tests
-tests
-test
-*.test.js
-*.spec.js
-coverage
 
 # CI/CD
 .github
@@ -94,17 +91,13 @@ docker-compose.yml
 docker-compose.*.yml
 Dockerfile.dev
 
-# Outros arquivos grandes desnecessários
+# Arquivos grandes desnecessários
 *.zip
 *.tar
 *.tar.gz
 *.rar
 *.7z
-*.dmg
-*.iso
 *.pdf
-*.mp4
-*.mov
 videos
 images
 screenshots
