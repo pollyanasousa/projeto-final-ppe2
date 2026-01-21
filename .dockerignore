@@ -3,6 +3,8 @@ node_modules
 npm-debug.log
 yarn.lock
 package-lock.json
+.npm
+.node_repl_history
 
 # Python
 __pycache__
@@ -15,6 +17,18 @@ __pycache__
 *.so
 .pytest_cache
 .coverage
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.nox
+.hypothesis
+.pytype
+venv
+env
+ENV
+*.egg-info
+dist
+build
 
 # Git
 .git
@@ -27,6 +41,8 @@ __pycache__
 *.swp
 *.swo
 .DS_Store
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 *.log
@@ -35,20 +51,60 @@ logs
 # Frontend (não precisa no backend)
 frontend
 cypress
+cypress.json
 docs
+public
 
 # Documentação
 *.md
 CENARIOS_TESTE.md
 RELATORIO_EXECUCAO_TESTES.md
 GUIA_INSTALACAO.md
+README.md
+LICENSE
+CHANGELOG.md
 
 # Environment local
 .env.local
 .env.development
+.env.test
 
 # Cache Python gerado localmente
 python_rag/cache_faiss.index
 python_rag/cache_store.pkl
 python_rag/venv
 python_rag/.venv
+python_rag/__pycache__
+
+# Tests
+tests
+test
+*.test.js
+*.spec.js
+coverage
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile.dev
+
+# Outros arquivos grandes desnecessários
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.dmg
+*.iso
+*.pdf
+*.mp4
+*.mov
+videos
+images
+screenshots
