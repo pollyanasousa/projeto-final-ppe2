@@ -31,6 +31,9 @@ if not GROQ_API_KEY:
 CACHE_FAISS = Path(__file__).parent / "cache_faiss.index"
 CACHE_STORE = Path(__file__).parent / "cache_store.pkl"
 
+# ✅ MODELO ÚNICO - usar sempre o mesmo
+EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+
 def salvar_cache(base):
     base.save_local(str(CACHE_FAISS))
     with open(CACHE_STORE, "wb") as f:
@@ -40,7 +43,7 @@ def carregar_cache():
     if CACHE_FAISS.exists() and CACHE_STORE.exists():
         try:
             embeddings = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+                model_name=EMBEDDING_MODEL  # ✅ MESMO MODELO
             )
             base = FAISS.load_local(
                 str(CACHE_FAISS),
@@ -104,7 +107,7 @@ def carregar_pdfs_cpm():
             print(f"Erro ao carregar {pdf_path.name}: {e}", file=sys.stderr)
 
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        model_name=EMBEDDING_MODEL  # ✅ MESMO MODELO
     )
     base = FAISS.from_documents(documentos, embeddings)
     salvar_cache(base)

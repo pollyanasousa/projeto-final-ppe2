@@ -1,17 +1,8 @@
 // =====================================================
-//  SCRIPT.JS — Lógica do formulário de matrícula
-// -----------------------------------------------------
-//  LOCAL: /frontend/script.js
-//  RESPONSABILIDADE: Gerenciar exclusivamente o fluxo de
-//  inscrição (validações, consulta de CEP, checagem de 
-//  pendências, envio dos dados e interface do formulário).
-//  Este arquivo não interfere no chat do assistente (IA).
+//  SCRIPT.JS - Lógica do formulário de matrícula
+//  VERSÃO COM DEBUG PARA MODAL DE INADIMPLÊNCIA
 // =====================================================
 
-
-// =====================================================
-//  ELEMENTOS DO DOM (Formulário de matrícula)
-// =====================================================
 const form = document.getElementById('inscricaoForm');
 const alertBox = document.getElementById('alertBox');
 const loading = document.getElementById('loading');
@@ -20,29 +11,16 @@ const responsavelSection = document.getElementById('responsavelSection');
 const pendenciaModal = document.getElementById('pendenciaModal');
 const sucessoModal = document.getElementById('sucessoModal');
 
-// Campos principais do formulário
 const cpfCandidatoInput = document.getElementById('cpfCandidato');
 const cpfResponsavelInput = document.getElementById('cpfResponsavel');
 const cepInput = document.getElementById('cep');
 const telefoneInput = document.getElementById('telefone');
 const dataNascimentoInput = document.getElementById('dataNascimento');
 
-
-// =====================================================
-//  FLAG DE CONTROLE
-// -----------------------------------------------------
-//  Evita conflito com o sistema de chat, garantindo que
-//  o loading só apareça em processos do formulário.
-// =====================================================
 let form_processandoMatricula = false;
-
 
 // =====================================================
 //  FORMATAÇÃO AUTOMÁTICA DE CAMPOS
-// -----------------------------------------------------
-//  Aplica máscaras de CPF, CEP e telefone conforme o 
-//  usuário digita. A função é genérica para reaproveitar
-//  nos campos de CPF.
 // =====================================================
 function formatarCampo(input, regexps) {
     input.addEventListener('input', e => {
@@ -52,27 +30,22 @@ function formatarCampo(input, regexps) {
     });
 }
 
-// CPF do candidato
 formatarCampo(cpfCandidatoInput, [
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d{1,2})$/, '$1-$2']
 ]);
 
-// CPF do responsável
 formatarCampo(cpfResponsavelInput, [
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d{1,2})$/, '$1-$2']
 ]);
 
-// CEP
 formatarCampo(cepInput, [[/(\d{5})(\d)/, '$1-$2']]);
 
-// Telefone (formatação dinâmica conforme tamanho)
 telefoneInput.addEventListener('input', e => {
     let valor = e.target.value.replace(/\D/g, '');
-
     if (valor.length <= 11) {
         valor = valor.replace(/(\d{2})(\d)/, '($1) $2');
         valor = valor.replace(
@@ -83,12 +56,8 @@ telefoneInput.addEventListener('input', e => {
     }
 });
 
-
 // =====================================================
 //  EXIBIÇÃO CONDICIONAL DE CAMPOS DO RESPONSÁVEL
-// -----------------------------------------------------
-//  Ativa ou desativa os campos obrigatórios quando o 
-//  candidato é menor de idade.
 // =====================================================
 menorIdadeSelect.addEventListener('change', () => {
     if (menorIdadeSelect.value === 'sim') {
@@ -104,12 +73,8 @@ menorIdadeSelect.addEventListener('change', () => {
     }
 });
 
-
 // =====================================================
-//  CONSULTA DE CEP — Brasil API
-// -----------------------------------------------------
-//  Preenche automaticamente endereço básico caso o CEP 
-//  seja válido. Caso contrário, o usuário preenche manual.
+//  CONSULTA DE CEP
 // =====================================================
 cepInput.addEventListener('blur', async function () {
     const cep = this.value.replace(/\D/g, '');
@@ -135,12 +100,8 @@ cepInput.addEventListener('blur', async function () {
     }
 });
 
-
 // =====================================================
 //  VALIDAÇÃO DE IDADE DO CANDIDATO
-// -----------------------------------------------------
-//  Determina automaticamente se o candidato é menor de 
-//  idade com base na data de nascimento informada.
 // =====================================================
 dataNascimentoInput.addEventListener('blur', () => {
     const data = new Date(dataNascimentoInput.value);
@@ -168,46 +129,66 @@ dataNascimentoInput.addEventListener('blur', () => {
     }
 });
 
-
 // =====================================================
-//  SUBMISSÃO DO FORMULÁRIO
-// -----------------------------------------------------
-//  Fluxo completo:
-//  1. Valida campos
-//  2. Checa pendências financeiras do candidato
-//  3. Checa pendências do responsável (se houver)
-//  4. Registra a inscrição
-//  5. Exibe modal de sucesso ou pendências
+//  SUBMISSÃO DO FORMULÁRIO - VERSÃO COM DEBUG
 // =====================================================
 form.addEventListener('submit', async e => {
     e.preventDefault();
 
+    console.log('========================================');
+    console.log('INÍCIO DO PROCESSO DE MATRÍCULA');
+    console.log('========================================');
+
     form_processandoMatricula = true;
 
     if (!validarFormulario()) {
+        console.log('ERRO: Validação de formulário falhou');
         form_processandoMatricula = false;
         return;
     }
 
     const dados = coletarDadosFormulario();
+    console.log('Dados coletados:', dados);
+
     form_mostrarLoading('Verificando cadastro no sistema...');
 
     try {
-        // Verifica situação do candidato
+        // ==========================================
+        // VERIFICAR INADIMPLÊNCIA DO CANDIDATO
+        // ==========================================
+        console.log('Verificando inadimplência do candidato:', dados.cpfCandidato);
+        
         const resultadoCandidato = await verificarInadimplencia(dados.cpfCandidato);
+        
+        console.log('Resultado da verificação (candidato):', resultadoCandidato);
 
+        // DEBUG: Verificar estrutura da resposta
         if (resultadoCandidato.inadimplente) {
+            console.log('INADIMPLENTE DETECTADO!');
+            console.log('Dados recebidos:', resultadoCandidato.dados);
+            console.log('Tem propriedade debitos?', resultadoCandidato.dados?.debitos);
+            console.log('Tem propriedade totalDevido?', resultadoCandidato.dados?.totalDevido);
+            
             form_esconderLoading();
             mostrarModalPendencia(resultadoCandidato.dados);
             form_processandoMatricula = false;
             return;
         }
 
-        // Caso menor de idade, verifica o responsável
+        // ==========================================
+        // VERIFICAR INADIMPLÊNCIA DO RESPONSÁVEL
+        // ==========================================
         if (dados.menorIdade === 'sim') {
+            console.log('Verificando inadimplência do responsável:', dados.cpfResponsavel);
+            
             const resultadoResponsavel = await verificarInadimplencia(dados.cpfResponsavel);
+            
+            console.log('Resultado da verificação (responsável):', resultadoResponsavel);
 
             if (resultadoResponsavel.inadimplente) {
+                console.log('INADIMPLENTE DETECTADO (RESPONSÁVEL)!');
+                console.log('Dados recebidos:', resultadoResponsavel.dados);
+                
                 form_esconderLoading();
                 mostrarModalPendencia(resultadoResponsavel.dados);
                 form_processandoMatricula = false;
@@ -215,26 +196,36 @@ form.addEventListener('submit', async e => {
             }
         }
 
-        // Registra a inscrição
+        // ==========================================
+        // REGISTRAR INSCRIÇÃO
+        // ==========================================
+        console.log('Nenhuma inadimplência detectada. Registrando inscrição...');
+        
         const resultadoInscricao = await registrarInscricao(dados);
         form_esconderLoading();
 
+        console.log('Resultado da inscrição:', resultadoInscricao);
+
         if (resultadoInscricao.sucesso) {
+            console.log('MATRÍCULA REALIZADA COM SUCESSO!');
             mostrarModalSucesso(resultadoInscricao.protocolo);
             limparFormulario();
         } else {
+            console.log('ERRO ao registrar inscrição');
             mostrarAlerta('Erro ao registrar inscrição. Tente novamente.', 'danger');
         }
 
     } catch (err) {
         form_esconderLoading();
+        console.error('ERRO CRÍTICO:', err);
         mostrarAlerta('Erro ao processar inscrição. Tente novamente mais tarde.', 'danger');
-        console.error('[FORM] Erro:', err);
     } finally {
         form_processandoMatricula = false;
+        console.log('========================================');
+        console.log('FIM DO PROCESSO DE MATRÍCULA');
+        console.log('========================================');
     }
 });
-
 
 // =====================================================
 //  VALIDAÇÃO DE CAMPOS DO FORMULÁRIO
@@ -269,7 +260,6 @@ function validarFormulario() {
     return true;
 }
 
-
 // =====================================================
 //  COLETA E ESTRUTURAÇÃO DOS DADOS DO FORMULÁRIO
 // =====================================================
@@ -298,7 +288,6 @@ function coletarDadosFormulario() {
     };
 }
 
-
 // =====================================================
 //  RESET DO FORMULÁRIO
 // =====================================================
@@ -307,10 +296,8 @@ function limparFormulario() {
     responsavelSection.style.display = 'none';
 }
 
-
 // =====================================================
-//  INTERFACE — Funções de apoio visual
-//  Prefixo form_ evita conflitos com scripts do chat
+//  INTERFACE - Funções de apoio visual
 // =====================================================
 function mostrarAlerta(msg, tipo) {
     alertBox.className = `alert alert-${tipo} show`;
@@ -321,7 +308,6 @@ function mostrarAlerta(msg, tipo) {
 
 function form_mostrarLoading(msg = 'Processando...') {
     if (!form_processandoMatricula) return;
-
     loading.querySelector('p').textContent = msg;
     loading.classList.add('show');
     form.style.display = 'none';
@@ -332,34 +318,113 @@ function form_esconderLoading() {
     form.style.display = 'block';
 }
 
+// =====================================================
+//  MODAL DE PENDÊNCIA - VERSÃO COMPATÍVEL COM MONGODB
+// =====================================================
 function mostrarModalPendencia(dados) {
+    console.log('========================================');
+    console.log('EXIBINDO MODAL DE PENDÊNCIA');
+    console.log('Dados recebidos (RAW):', JSON.stringify(dados, null, 2));
+    console.log('========================================');
+
     const debtDetails = document.getElementById('debtDetails');
+    
+    if (!dados) {
+        console.error('ERRO: dados é null ou undefined');
+        mostrarAlerta('Erro ao exibir detalhes da pendência.', 'danger');
+        return;
+    }
+
     let html = '';
+    let totalCalculado = 0;
 
-    dados.debitos.forEach(d => {
-        html += `<div class="debt-item"><span>${d.descricao}</span><span>R$ ${d.valor.toFixed(2)}</span></div>`;
-    });
+    // Verificar se tem array de débitos
+    if (dados.debitos && Array.isArray(dados.debitos) && dados.debitos.length > 0) {
+        console.log(`Processando ${dados.debitos.length} débitos`);
+        
+        dados.debitos.forEach((d, index) => {
+            console.log(`Débito ${index}:`, d);
+            
+            // Aceitar múltiplas variações de campo
+            const descricao = d.descricao || d.description || d.tipo || d.type || 'Débito não especificado';
+            const valor = parseFloat(d.valor || d.value || d.amount || d.preco || 0);
+            
+            console.log(`  - Descrição: ${descricao}`);
+            console.log(`  - Valor: R$ ${valor.toFixed(2)}`);
+            
+            totalCalculado += valor;
+            
+            html += `<div class="debt-item">
+                <span>${descricao}</span>
+                <span>R$ ${valor.toFixed(2)}</span>
+            </div>`;
+        });
 
-    html += `<div class="debt-item"><span><strong>Total devido</strong></span><span><strong>R$ ${dados.totalDevido.toFixed(2)}</strong></span></div>`;
+        // Aceitar múltiplas variações de campo total
+        // ✅ CORRIGIDO: aceita total_devido (MongoDB) e totalDevido (JavaScript)
+        const totalFinal = dados.total_devido || dados.totalDevido || dados.total || totalCalculado;
+        
+        console.log(`Total calculado: R$ ${totalCalculado.toFixed(2)}`);
+        console.log(`Total do banco: R$ ${totalFinal}`);
+        
+        html += `<div class="debt-item">
+            <span><strong>Total devido</strong></span>
+            <span><strong>R$ ${parseFloat(totalFinal).toFixed(2)}</strong></span>
+        </div>`;
+    }
+    // Fallback se não encontrar débitos estruturados
+    else {
+        console.warn('AVISO: Estrutura de débitos não encontrada');
+        console.log('Propriedades disponíveis:', Object.keys(dados));
+        
+        html = `<div class="debt-item">
+            <span>Pendência financeira detectada</span>
+            <span>Consulte a secretaria</span>
+        </div>
+        <div class="debt-item">
+            <span><strong>Status</strong></span>
+            <span><strong>${dados.status || 'PENDENTE'}</strong></span>
+        </div>`;
+        
+        // Se tiver total_devido ou totalDevido, mostrar
+        const total = dados.total_devido || dados.totalDevido || dados.total;
+        if (total) {
+            html += `<div class="debt-item">
+                <span><strong>Valor aproximado</strong></span>
+                <span><strong>R$ ${parseFloat(total).toFixed(2)}</strong></span>
+            </div>`;
+        }
+    }
     
     debtDetails.innerHTML = html;
+    
+    console.log('HTML final:', html);
+    console.log('Exibindo modal...');
+    
     pendenciaModal.classList.add('show');
+    
+    console.log('Modal exibido. Classes:', pendenciaModal.classList.toString());
+    
+    // Garantir que modal seja visível
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function fecharModal() {
+    console.log('Fechando modal de pendência');
     pendenciaModal.classList.remove('show');
     limparFormulario();
 }
 
 function mostrarModalSucesso(protocolo) {
+    console.log('Exibindo modal de sucesso. Protocolo:', protocolo);
     document.getElementById('protocoloNumero').textContent = protocolo;
     sucessoModal.classList.add('show');
 }
 
 function fecharModalSucesso() {
+    console.log('Fechando modal de sucesso');
     sucessoModal.classList.remove('show');
     limparFormulario();
 }
 
-
-console.log('SCRIPT DO FORMULÁRIO CARREGADO');
+console.log('SCRIPT DO FORMULÁRIO CARREGADO COM DEBUG ATIVADO');

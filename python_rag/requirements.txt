@@ -1,7 +1,19 @@
+# LangChain - versões compatíveis
 langchain==0.3.7
+langchain-core==0.3.18
 langchain-community==0.3.7
-langchain-groq==0.2.5
+langchain-text-splitters==0.3.2
+langchain-huggingface==0.1.2
+
+# LLM
+langchain-groq==0.2.1
+
+# Vector store
 faiss-cpu==1.9.0
+
+# Embeddings
+sentence-transformers==3.3.1
+
+# Utilidades
 pypdf==5.1.0
 python-dotenv==1.0.1
-sentence-transformers==3.3.1

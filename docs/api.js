@@ -2,7 +2,7 @@
 // API.JS – CAMADA DE INTEGRAÇÃO DO FRONTEND COM O BACKEND
 // =====================================================
 
-const API_URL = 'https://projeto-final-ppe2-production.up.railway.app'; // Backend produção
+const API_URL = 'http://localhost:3000'; // Backend produção
 
 // FUNÇÃO CONSULTAR CEP (FALTANDO!)
 async function consultarCEP(cep) {

@@ -8,6 +8,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const cors = require('cors');
 const fs = require('fs');
+const os = require('os');
 
 // =====================================================
 //  CORS - permitir acesso do front
@@ -15,15 +16,21 @@ router.use(cors({ origin: '*' }));
 
 // =====================================================
 //  Caminho do script Python
-//  De: backend/routes/ -> python_rag/agente_cpm.py
-//  __dirname e backend/routes/
-//  Subimos 2 niveis: ../../ = raiz do projeto
-//  Depois: python_rag/agente_cpm.py
 const scriptPath = path.resolve(__dirname, '../../python_rag/agente_cpm.py');
 
 // =====================================================
-//  Executavel Python
-const pythonExecutable = 'python3';
+//  Executável Python - detecção automática
+let pythonExecutable;
+
+if (os.platform() === 'win32') {
+    // Windows: tentar venv primeiro, depois python global
+    const venvPython = path.resolve(__dirname, '../../python_rag/venv/Scripts/python.exe');
+    pythonExecutable = fs.existsSync(venvPython) ? venvPython : 'python';
+} else {
+    // Linux/Mac
+    const venvPython = path.resolve(__dirname, '../../python_rag/venv/bin/python3');
+    pythonExecutable = fs.existsSync(venvPython) ? venvPython : 'python3';
+}
 
 console.log('[AGENTE] Python em uso:', pythonExecutable);
 console.log('[AGENTE] Script carregado:', scriptPath);
@@ -82,17 +89,22 @@ router.post('/agente-consultar', async (req, res) => {
             if (res.headersSent) return;
 
             const respostaPronta = stdoutFull.trim();
+            
+            // Se código 0 e tem resposta, sucesso
             if (code === 0 && respostaPronta) {
                 return res.json({ sucesso: true, resposta: respostaPronta });
             }
 
+            // Se falhou, mostrar detalhes
             console.error('[AGENTE] Erro ou saida vazia');
             console.error('[AGENTE-STDERR]', stderrFull);
             console.error('[AGENTE-STDOUT]', stdoutFull);
 
             return res.status(500).json({
                 sucesso: false,
-                erro: 'Erro ao processar a consulta. Verifique os logs do servidor.'
+                erro: 'Erro ao processar a consulta.',
+                detalhes: stderrFull || 'Sem detalhes de erro',
+                stdout: stdoutFull || 'Sem saída'
             });
         });
 
@@ -101,7 +113,8 @@ router.post('/agente-consultar', async (req, res) => {
                 console.error('[AGENTE] Falha ao iniciar Python:', err);
                 return res.status(500).json({
                     sucesso: false,
-                    erro: 'Falha ao iniciar o assistente. Verifique a configuracao do Python.'
+                    erro: 'Falha ao iniciar o assistente Python.',
+                    detalhes: err.message
                 });
             }
         });
@@ -121,7 +134,11 @@ router.post('/agente-consultar', async (req, res) => {
     } catch (error) {
         console.error('[AGENTE] Erro inesperado:', error);
         if (!res.headersSent) {
-            res.status(500).json({ sucesso: false, erro: 'Erro interno do servidor.' });
+            res.status(500).json({ 
+                sucesso: false, 
+                erro: 'Erro interno do servidor.',
+                detalhes: error.message
+            });
         }
     }
 });
