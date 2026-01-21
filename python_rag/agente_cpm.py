@@ -40,7 +40,7 @@ def carregar_cache():
     if CACHE_FAISS.exists() and CACHE_STORE.exists():
         try:
             embeddings = HuggingFaceEmbeddings(
-                model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
             )
             base = FAISS.load_local(
                 str(CACHE_FAISS),
